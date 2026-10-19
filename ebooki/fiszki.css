@@ -1,0 +1,9 @@
+h2.hidden{display:none}
+.card{border:2px solid #c4122f;border-radius:10px;padding:1em;margin:1em 0}
+.nr{color:#c4122f;font-weight:bold;font-size:.85em;margin:0 0 .6em}
+.q{font-size:1.15em;font-weight:bold}
+.opts{list-style:none;padding:0}
+.opts li{border:1px solid #bbb;border-radius:6px;padding:.4em .6em;margin:.35em 0}
+.opts li.ok{border:3px solid #1a7f37;background:#dff3e4;font-weight:bold}
+.key{color:#1a7f37;font-weight:bold}
+.note{font-style:italic;font-size:.9em}
