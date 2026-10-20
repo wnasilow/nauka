@@ -41,6 +41,8 @@ summary::-webkit-details-marker{display:none}
 summary h2{font-size:1.3rem}
 summary .cnt{color:var(--muted);font-size:.9rem;white-space:nowrap}
 summary .cnt.done{color:var(--ok);font-weight:600}
+.fl{display:block;padding:0 16px 8px;font-size:.88rem;color:var(--accent);text-decoration:none}
+li a.fd{flex:none;font-size:1.1rem;text-decoration:none;color:var(--muted)}
 ul{list-style:none;margin:0;padding:0 8px 8px}
 li{display:flex;gap:10px;align-items:center;padding:8px;border-top:1px solid var(--line)}
 li input{width:22px;height:22px;flex:none;accent-color:var(--accent);cursor:pointer}
@@ -62,6 +64,7 @@ button.lnk{background:none;border:0;color:var(--accent);font:inherit;cursor:poin
   <label><input type="checkbox" id="hide"> ukryj obejrzane</label>
   <span id="sync" class="muted"></span>
 </div>
+<p class="muted small">Nazwa filmu otwiera plik w MEGA. Jeśli aplikacja MEGA na telefonie pokazuje zamiast niego cały folder, użyj „Otwórz cały moduł” albo 📂 i wybierz plik po numerze.</p>
 <div id="lista">Wczytuję listę…</div>
 </div>
 <script>
@@ -108,15 +111,20 @@ function rysuj() {
     const tytul = folder.split("/").pop() || folder;
     d.innerHTML = `<summary><h2></h2><span class="cnt${n === lista.length ? " done" : ""}">${n}/${lista.length}</span></summary><ul></ul>`;
     d.querySelector("h2").textContent = tytul;
+    const fl = document.createElement("a");
+    fl.className = "fl"; fl.href = lista[0].link_folderu || "#"; fl.target = "_blank"; fl.rel = "noopener";
+    fl.textContent = "Otwórz cały moduł w MEGA";
+    d.insertBefore(fl, d.querySelector("ul"));
     const ul = d.querySelector("ul");
     for (const f of lista) {
       const li = document.createElement("li");
       if (ob(f.id)) li.className = "w";
-      li.innerHTML = `<input type="checkbox" aria-label="obejrzane"><a target="_blank" rel="noopener"></a><span class="sz"></span>`;
+      li.innerHTML = `<input type="checkbox" aria-label="obejrzane"><a target="_blank" rel="noopener"></a><span class="sz"></span><a class="fd" target="_blank" rel="noopener" title="folder modułu w MEGA">📂</a>`;
       const cb = li.querySelector("input"); cb.checked = ob(f.id);
       cb.onchange = () => ustaw(f.id, cb.checked);
       const a = li.querySelector("a"); a.href = f.link; a.textContent = ladna(f.nazwa); a.title = f.nazwa;
       li.querySelector(".sz").textContent = mb(f.rozmiar);
+      const fd = li.querySelector("a.fd"); if (f.link_folderu) fd.href = f.link_folderu; else fd.remove();
       ul.appendChild(li);
     }
     box.appendChild(d);
