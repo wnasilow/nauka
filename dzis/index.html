@@ -27,11 +27,13 @@ h2{font-size:1rem;margin:22px 0 8px;color:var(--muted);font-weight:600;letter-sp
 <div class="bar"><i id="pas"></i></div>
 <div id="lista"></div>
 <h2>Ostatnie 14 dni</h2><div class="hist" id="hist"></div>
-<p class="foot" id="sync">Zapis w tej przeglądarce.</p>
+<p class="foot" id="sync">Zapis tylko w tej przeglądarce. Synchronizacja: otwórz raz adres z #sync=&lt;klucz&gt;.</p>
 </div>
 <script>
-// Adres wspólnego magazynu postępu na serwerze (ten sam co /nauka/boks/). Pusty = tylko localStorage.
-const SYNC_URL='';
+// Wspólny magazyn postępu na serwerze nieciecz (ten sam co /nauka/boks/). Klucz podaje się raz: …/dzis/#sync=<klucz>,
+// zostaje w przeglądarce i działa dla wszystkich stron /nauka/. Bez klucza zapis tylko w localStorage.
+let KLUCZ=null;try{const m=location.hash.match(/sync=([\w-]+)/);if(m){localStorage.setItem('nauka_sync_klucz',m[1]);history.replaceState(null,'',location.pathname)}KLUCZ=localStorage.getItem('nauka_sync_klucz')}catch(e){}
+const SYNC_URL=KLUCZ?'https://nieciecz.taile0bd49.ts.net:8443/sync/'+KLUCZ+'/dzis':'';
 const ZAD=[
  {j:'Języki · angielski',id:'manchester',n:'Fiszki Manchester',o:'Słówka z Quizletu',href:'../manchester/'},
  {j:'Języki · angielski',id:'speak',n:'Speak',o:'Rozmowa z AI',ios:'https://apps.apple.com/pl/app/id1286609883',and:'com.selabs.speak',web:'https://www.speak.com/'},
@@ -68,8 +70,8 @@ function rysuj(){
 }
 document.getElementById('lista').addEventListener('change',e=>{const k=e.target.dataset.k;if(!k)return;S[DZIS]=S[DZIS]||{};S[DZIS][k]={v:e.target.checked,t:Date.now()};zapiszLok();rysuj();wyslij()});
 const info=t=>document.getElementById('sync').textContent=t;
-async function pobierz(){const r=await fetch(SYNC_URL,{cache:'no-store'});if(r.status===404)return{};if(!r.ok)throw 0;const t=await r.text();return t?JSON.parse(t):{}}
-async function wyslij(){if(!SYNC_URL)return;try{S=scal(S,await pobierz());zapiszLok();rysuj();const r=await fetch(SYNC_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)});if(!r.ok)throw 0;info('Zsynchronizowano '+new Date().toLocaleTimeString('pl-PL'))}catch(e){info('Brak połączenia z serwerem, zapis w tej przeglądarce.')}}
+async function pobierz(){const r=await fetch(SYNC_URL,{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();return (j&&j.v)||{}}
+async function wyslij(){if(!SYNC_URL)return;try{S=scal(S,await pobierz());zapiszLok();rysuj();const r=await fetch(SYNC_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:S})});if(!r.ok)throw 0;info('Zsynchronizowano '+new Date().toLocaleTimeString('pl-PL'))}catch(e){info('Brak połączenia z serwerem, zapis w tej przeglądarce.')}}
 async function synchro(){if(!SYNC_URL)return;try{const zdal=await pobierz();S=scal(S,zdal);zapiszLok();rysuj();if(JSON.stringify(scal(zdal,S))!==JSON.stringify(zdal))await wyslij();else info('Zsynchronizowano '+new Date().toLocaleTimeString('pl-PL'))}catch(e){info('Brak połączenia z serwerem, zapis w tej przeglądarce.')}}
 rysuj();synchro();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(dz(new Date())!==DZIS)location.reload();else synchro()}});
