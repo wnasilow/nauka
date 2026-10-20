@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Boks</title>
+<meta name="theme-color" content="#c4122f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{
+  --bg:#f3f4f2; --panel:#fff; --ink:#1b1f22; --muted:#5d666c; --line:#d9ddda;
+  --accent:#c4122f; --accent-ink:#fff; --accent-soft:#fbe7ea; --ok:#1f7a3a;
+  --font-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --font-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141719; --panel:#1d2124; --ink:#e8eae8; --muted:#9aa3a8; --line:#30363a;
+  --accent:#ff5468; --accent-ink:#1a0005; --accent-soft:#3a1a20; --ok:#5fd17f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141719; --panel:#1d2124; --ink:#e8eae8; --muted:#9aa3a8; --line:#30363a;
+  --accent:#ff5468; --accent-ink:#1a0005; --accent-soft:#3a1a20; --ok:#5fd17f; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--font-body);padding:env(safe-area-inset-top) 16px calc(32px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
+.wrap{max-width:680px;margin:0 auto}
+h1,h2{font-family:var(--font-display);font-weight:700;line-height:1.1;margin:0}
+h1{font-size:2rem}
+header{padding:20px 0 6px}
+header a{color:var(--muted);font-size:.9rem;text-decoration:none}
+.muted{color:var(--muted)} .small{font-size:.88rem}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.tools{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:10px 0 14px}
+.tools label{display:flex;gap:6px;align-items:center;cursor:pointer}
+#sync{font-size:.85rem}
+details{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin:10px 0;overflow:hidden}
+summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary h2{font-size:1.3rem}
+summary .cnt{color:var(--muted);font-size:.9rem;white-space:nowrap}
+summary .cnt.done{color:var(--ok);font-weight:600}
+ul{list-style:none;margin:0;padding:0 8px 8px}
+li{display:flex;gap:10px;align-items:center;padding:8px;border-top:1px solid var(--line)}
+li input{width:22px;height:22px;flex:none;accent-color:var(--accent);cursor:pointer}
+li a{flex:1;color:var(--ink);text-decoration:none;min-width:0;overflow-wrap:anywhere}
+li a:hover{color:var(--accent)}
+li .sz{color:var(--muted);font-size:.8rem;white-space:nowrap}
+li.w a{color:var(--muted)}
+body.hide li.w{display:none}
+body.hide details.alldone{display:none}
+button.lnk{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;padding:0;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><a href="../">← Nauka</a><h1>Boks</h1><div class="muted small" id="src"></div></header>
+<div class="bar"><i id="pbar"></i></div>
+<div id="ptxt" class="small"></div>
+<div class="tools">
+  <label><input type="checkbox" id="hide"> ukryj obejrzane</label>
+  <span id="sync" class="muted"></span>
+</div>
+<div id="lista">Wczytuję listę…</div>
+</div>
+<script>
+// Stan: {id: {w: 1|0, t: ms}}. Scalanie: dla każdego filmu wygrywa nowszy znacznik czasu,
+// więc odznaczenie na jednym urządzeniu przechodzi na inne, a zaznaczenia sumują się.
+const API = "https://nieciecz.taile0bd49.ts.net:8443/sync/";
+const SERWIS = "boks", LS = "nauka_boks_stan", LSK = "nauka_sync_klucz", LSH = "nauka_boks_ukryj";
+const ls = {get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+// Klucz synchronizacji podaje się raz w adresie: …/boks/#sync=<klucz> (potem zostaje w przeglądarce).
+const m = location.hash.match(/sync=([\w-]+)/);
+if (m) { ls.set(LSK, m[1]); history.replaceState(null, "", location.pathname); }
+const KLUCZ = ls.get(LSK);
+
+let stan = {}; try { stan = JSON.parse(ls.get(LS) || "{}") || {}; } catch (e) {}
+let filmy = [];
+const $ = s => document.querySelector(s);
+
+function scal(a, b) {
+  const o = {...a};
+  for (const [k, v] of Object.entries(b || {})) if (!o[k] || (v.t || 0) > (o[k].t || 0)) o[k] = v;
+  return o;
+}
+const ob = id => !!(stan[id] && stan[id].w);
+const nat = (a, b) => a.localeCompare(b, "pl", {numeric: true, sensitivity: "base"});
+const ladna = n => n.replace(/\.[^.]+$/, "").replace(/\s*-\s*Tony Jeffries\s*$/i, "");
+const mb = s => s >= 1e9 ? (s / 1e9).toFixed(1) + " GB" : Math.round(s / 1e6) + " MB";
+
+function rysuj() {
+  const grupy = new Map();
+  for (const f of filmy) { if (!grupy.has(f.folder)) grupy.set(f.folder, []); grupy.get(f.folder).push(f); }
+  const otwarte = new Set([...document.querySelectorAll("details[open]")].map(d => d.dataset.f));
+  const pierwszyRaz = !document.querySelector("details");
+  const box = $("#lista"); box.innerHTML = "";
+  let razem = 0, obejrz = 0, pierwszyNieobejrzany = null;
+  for (const folder of [...grupy.keys()].sort(nat)) {
+    const lista = grupy.get(folder).sort((a, b) => nat(a.nazwa, b.nazwa));
+    const n = lista.filter(f => ob(f.id)).length;
+    razem += lista.length; obejrz += n;
+    if (pierwszyNieobejrzany === null && n < lista.length) pierwszyNieobejrzany = folder;
+    const d = document.createElement("details");
+    d.dataset.f = folder;
+    if (n === lista.length) d.className = "alldone";
+    const tytul = folder.split("/").pop() || folder;
+    d.innerHTML = `<summary><h2></h2><span class="cnt${n === lista.length ? " done" : ""}">${n}/${lista.length}</span></summary><ul></ul>`;
+    d.querySelector("h2").textContent = tytul;
+    const ul = d.querySelector("ul");
+    for (const f of lista) {
+      const li = document.createElement("li");
+      if (ob(f.id)) li.className = "w";
+      li.innerHTML = `<input type="checkbox" aria-label="obejrzane"><a target="_blank" rel="noopener"></a><span class="sz"></span>`;
+      const cb = li.querySelector("input"); cb.checked = ob(f.id);
+      cb.onchange = () => ustaw(f.id, cb.checked);
+      const a = li.querySelector("a"); a.href = f.link; a.textContent = ladna(f.nazwa); a.title = f.nazwa;
+      li.querySelector(".sz").textContent = mb(f.rozmiar);
+      ul.appendChild(li);
+    }
+    box.appendChild(d);
+    if (otwarte.has(folder)) d.open = true;
+  }
+  if (pierwszyRaz && pierwszyNieobejrzany !== null) {
+    const d = [...box.querySelectorAll("details")].find(x => x.dataset.f === pierwszyNieobejrzany);
+    if (d) d.open = true;
+  }
+  $("#pbar").style.width = razem ? (100 * obejrz / razem) + "%" : 0;
+  $("#ptxt").textContent = `Obejrzane: ${obejrz} z ${razem} (${razem ? Math.round(100 * obejrz / razem) : 0}%)`;
+}
+
+function ustaw(id, w) {
+  stan[id] = {w: w ? 1 : 0, t: Date.now()};
+  ls.set(LS, JSON.stringify(stan));
+  rysuj();
+  wyslij();
+}
+
+function info(t) { $("#sync").textContent = t; }
+
+async function pobierz() {
+  const r = await fetch(API + KLUCZ + "/" + SERWIS, {cache: "no-store"});
+  if (!r.ok) throw new Error(r.status);
+  return (await r.json()).v || {};
+}
+let trwa = false, znowu = false;
+async function wyslij() {
+  if (!KLUCZ) return;
+  if (trwa) { znowu = true; return; }
+  trwa = true;
+  try {
+    stan = scal(stan, await pobierz());
+    const r = await fetch(API + KLUCZ + "/" + SERWIS, {method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({v: stan})});
+    if (!r.ok) throw new Error(r.status);
+    ls.set(LS, JSON.stringify(stan));
+    info("zsynchronizowano " + new Date().toLocaleTimeString("pl", {hour: "2-digit", minute: "2-digit"}));
+  } catch (e) {
+    info("offline, zapisano w tej przeglądarce");
+  }
+  trwa = false;
+  if (znowu) { znowu = false; wyslij(); }
+}
+async function synchronizuj() {
+  if (!KLUCZ) { info("synchronizacja wyłączona (otwórz stronę z linkiem #sync=…)"); return; }
+  try {
+    const zdalny = await pobierz();
+    const przed = JSON.stringify(stan);
+    stan = scal(stan, zdalny);
+    ls.set(LS, JSON.stringify(stan));
+    if (JSON.stringify(stan) !== przed) rysuj();
+    // lokalne zmiany, których serwer nie ma, odsyłamy
+    if (JSON.stringify(scal(zdalny, stan)) !== JSON.stringify(zdalny)) await wyslij();
+    else info("zsynchronizowano " + new Date().toLocaleTimeString("pl", {hour: "2-digit", minute: "2-digit"}));
+  } catch (e) { info("offline, zapisano w tej przeglądarce"); }
+}
+
+$("#hide").checked = ls.get(LSH) === "1";
+document.body.classList.toggle("hide", $("#hide").checked);
+$("#hide").onchange = e => { document.body.classList.toggle("hide", e.target.checked); ls.set(LSH, e.target.checked ? "1" : "0"); };
+document.addEventListener("visibilitychange", () => { if (!document.hidden) synchronizuj(); });
+
+fetch("filmy.json", {cache: "no-cache"}).then(r => r.json()).then(d => {
+  filmy = d.filmy;
+  const gl = [...new Set(filmy.map(f => f.folder.split("/")[0]))];
+  $("#src").textContent = gl.join(", ") + " · " + filmy.length + " filmów · " + mb(filmy.reduce((s, f) => s + f.rozmiar, 0));
+  rysuj();
+  synchronizuj();
+}).catch(() => { $("#lista").textContent = "Nie udało się wczytać listy filmów."; });
+</script>
+</body>
+</html>
