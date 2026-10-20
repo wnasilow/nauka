@@ -1,0 +1,29 @@
+[
+{
+"id": "6b91695153fa",
+"pl": "gdzie jest dworzec?",
+"en": "where is the station?",
+"d": "2026-10-20",
+"t": "2026-43",
+"apl": "a/pl_af7cde4612d9.mp3",
+"aen": "a/en_914a49a377b4.mp3"
+},
+{
+"id": "4a1ee451a4e9",
+"pl": "To jest drogie",
+"en": "It is expensive",
+"d": "2026-10-20",
+"t": "2026-43",
+"apl": "a/pl_bd0a0660fd56.mp3",
+"aen": "a/en_c025c80e66b4.mp3"
+},
+{
+"id": "8b49e3d6a057",
+"pl": "bilet powrotny",
+"en": "return ticket",
+"d": "2026-10-20",
+"t": "2026-43",
+"apl": "a/pl_3577a578ea80.mp3",
+"aen": "a/en_59b348f3e001.mp3"
+}
+]

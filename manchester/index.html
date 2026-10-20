@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Fiszki Manchester</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Manchester">
+<meta name="theme-color" content="#c4122f">
+<link rel="alternate" type="application/rss+xml" title="Fiszki Manchester" href="feed.xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{
+  --bg:#f3f4f2; --panel:#fff; --ink:#1b1f22; --muted:#5d666c; --line:#d9ddda;
+  --accent:#c4122f; --accent-ink:#fff; --accent-soft:#fbe7ea; --en:#0b3d91; --en-soft:#e6ecf8;
+  --font-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --font-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141719; --panel:#1d2124; --ink:#e8eae8; --muted:#9aa3a8; --line:#30363a;
+  --accent:#ff5468; --accent-ink:#1a0005; --accent-soft:#3a1a20; --en:#8db4ff; --en-soft:#1a2540; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141719; --panel:#1d2124; --ink:#e8eae8; --muted:#9aa3a8; --line:#30363a;
+  --accent:#ff5468; --accent-ink:#1a0005; --accent-soft:#3a1a20; --en:#8db4ff; --en-soft:#1a2540; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--font-body);padding:env(safe-area-inset-top) 16px calc(32px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
+.wrap{max-width:640px;margin:0 auto}
+h1,h2{font-family:var(--font-display);font-weight:700;line-height:1.1;margin:0}
+h1{font-size:2rem} h2{font-size:1.4rem;margin:18px 0 8px}
+header{display:flex;align-items:end;justify-content:space-between;gap:12px;padding:20px 0 10px}
+.muted{color:var(--muted)} .small{font-size:.88rem}
+nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:14px}
+nav.tabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;padding:10px 4px;font:600 1rem var(--font-body);color:var(--muted);cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,button.btn{font:600 .95rem var(--font-body);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:9px 12px;min-height:44px}
+button.btn{cursor:pointer}
+button.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.card{margin:14px 0;background:var(--panel);border:1px solid var(--line);border-radius:18px;min-height:260px;display:flex;flex-direction:column;padding:14px 18px;cursor:pointer;user-select:none;transition:background .2s}
+.card.en{background:var(--en-soft)}
+.card .meta{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted)}
+.card .side{font:700 .8rem var(--font-body);letter-spacing:.1em;padding:2px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.card.en .side{background:var(--panel);color:var(--en)}
+.card .txt{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(1.6rem,7vw,2.4rem);line-height:1.2;padding:18px 0;overflow-wrap:anywhere}
+.card.en .txt{color:var(--en)}
+.card .hint{text-align:center;font-size:.8rem;color:var(--muted)}
+.controls{display:grid;grid-template-columns:1fr 1fr 1.4fr 1fr 1fr;gap:8px}
+.controls button{font-size:1.25rem}
+.opts{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.opts label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted)}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+ul.list{list-style:none;padding:0;margin:0}
+ul.list li{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+ul.list .en{color:var(--en)}
+ul.list button{background:none;border:0;font-size:1.2rem;cursor:pointer;color:var(--ink);min-width:44px;min-height:44px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0}
+.feed{display:flex;gap:8px}
+.feed input{flex:1;min-width:0;font:400 .9rem ui-monospace,Menlo,monospace;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+audio{width:100%;margin-top:6px}
+a{color:var(--accent)}
+[hidden]{display:none!important}
+.empty{padding:40px 0;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><div class="muted small">Quizlet · zestaw</div><h1>Fiszki Manchester</h1></div>
+  <div class="muted small" id="licznik"></div>
+</header>
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="fiszki" aria-selected="true">Fiszki</button>
+  <button role="tab" data-tab="lista" aria-selected="false">Lista</button>
+  <button role="tab" data-tab="podcast" aria-selected="false">Podcast i pliki</button>
+</nav>
+
+<section id="fiszki">
+  <div class="row">
+    <select id="zakres" aria-label="Zakres"></select>
+    <button class="btn" id="kier" title="Kierunek">PL → EN</button>
+    <button class="btn" id="mieszaj" aria-pressed="false">Wymieszaj</button>
+  </div>
+  <div class="card" id="karta" tabindex="0" aria-live="polite">
+    <div class="meta"><span class="side" id="strona">PL</span><span id="pozycja"></span></div>
+    <div class="txt" id="tekst"></div>
+    <div class="hint">Dotknij, aby odwrócić</div>
+  </div>
+  <div class="bar"><i id="pasek"></i></div>
+  <div class="controls" style="margin-top:12px">
+    <button class="btn" id="wstecz" aria-label="Poprzednia">⏮</button>
+    <button class="btn" id="powtorz" aria-label="Powtórz wymowę">🔊</button>
+    <button class="btn primary" id="graj" aria-label="Odtwarzaj po kolei">▶ Odtwarzaj</button>
+    <button class="btn" id="odwroc" aria-label="Odwróć">⟲</button>
+    <button class="btn" id="dalej" aria-label="Następna">⏭</button>
+  </div>
+  <div class="opts">
+    <label>Pauza na odpowiedź<select id="pauza"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>8</option></select></label>
+    <label>Prędkość<select id="tempo"><option value="0.75">0,75×</option><option value="0.9">0,9×</option><option value="1" selected>1×</option><option value="1.15">1,15×</option><option value="1.3">1,3×</option></select></label>
+    <label>Na końcu<select id="petla"><option value="1">zapętl</option><option value="0">zatrzymaj</option></select></label>
+    <label>Druga strona<select id="powtorzEn"><option value="1">raz</option><option value="2">dwa razy</option></select></label>
+  </div>
+</section>
+
+<section id="lista" hidden>
+  <ul class="list" id="listaUl"></ul>
+</section>
+
+<section id="podcast" hidden>
+  <div class="box">
+    <h2 style="margin-top:0">Słuchaj w aplikacji do podcastów</h2>
+    <p class="small">Co tydzień pojawia się odcinek z nowymi słówkami i odświeżony odcinek „Wszystkie słówka”. Telefon pobierze je sam, także do słuchania offline.</p>
+    <div class="feed"><input id="feedUrl" readonly><button class="btn" id="kopiuj">Kopiuj</button></div>
+    <p class="small"><b>iPhone</b>: aplikacja Podcasty → Biblioteka → ••• → „Śledź program przez URL” i wklej adres. Albo Pocket Casts → Szukaj → wklej adres.<br>
+    <b>Android</b>: Pocket Casts, Podcast Addict albo AntennaPod → dodaj przez URL / RSS i wklej adres.<br>
+    <a id="pcLink" href="#">Otwórz w Pocket Casts</a></p>
+  </div>
+  <div class="box">
+    <h2 style="margin-top:0">Pliki</h2>
+    <p><a href="Fiszki_Manchester.pdf">PDF</a> (karta PL, na następnej stronie EN) · <a href="Fiszki_Manchester.epub">EPUB</a> na czytnik</p>
+    <p class="small muted">Na stronę głównego ekranu: Safari → Udostępnij → „Do ekranu początkowego”; Chrome → ⋮ → „Dodaj do ekranu głównego”.</p>
+  </div>
+  <h2>Odcinki</h2>
+  <div id="odcinki"></div>
+</section>
+</div>
+
+<audio id="au" preload="auto"></audio>
+<script>
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem('mch_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('mch_'+k,JSON.stringify(v))}catch(e){}}};
+let KARTY=[],talia=[],i=0,odwr=false,gra=false,token=0;
+const au=$('#au');
+const S={zakres:store.get('zakres','all'),kier:store.get('kier','plen'),mieszaj:store.get('mieszaj',false),pauza:store.get('pauza','3'),tempo:store.get('tempo','1'),petla:store.get('petla','1'),powtorzEn:store.get('powtorzEn','1')};
+for(const k of ['pauza','tempo','petla','powtorzEn']){const el=$('#'+k);el.value=S[k];el.onchange=()=>{S[k]=el.value;store.set(k,el.value)}}
+
+function pierwsza(){return S.kier==='plen'?'pl':'en'}
+function druga(){return S.kier==='plen'?'en':'pl'}
+function biezaca(){return talia[i]}
+function stronaJez(){return odwr?druga():pierwsza()}
+
+function zbudujTalie(){
+  let t=S.zakres==='all'?KARTY.slice():KARTY.filter(k=>k.t===S.zakres);
+  if(S.mieszaj){for(let a=t.length-1;a>0;a--){const b=Math.floor(Math.random()*(a+1));[t[a],t[b]]=[t[b],t[a]]}}
+  talia=t;i=Math.min(store.get('poz_'+S.zakres,0),Math.max(0,t.length-1));odwr=false;pokaz();
+}
+function pokaz(){
+  const k=biezaca(),karta=$('#karta');
+  if(!k){$('#tekst').textContent='Brak fiszek';$('#pozycja').textContent='';return}
+  const j=stronaJez();
+  karta.classList.toggle('en',j==='en');
+  $('#strona').textContent=j.toUpperCase();
+  $('#tekst').textContent=k[j];
+  $('#pozycja').textContent=(i+1)+' / '+talia.length;
+  $('#pasek').style.width=((i+1)/talia.length*100)+'%';
+  store.set('poz_'+S.zakres,i);
+  if('mediaSession' in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:k.pl+' — '+k.en,artist:'Fiszki Manchester',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]})}
+}
+function odtworz(j){
+  const k=biezaca();if(!k)return Promise.resolve();
+  return new Promise(res=>{au.src=k['a'+j];au.playbackRate=parseFloat(S.tempo);au.onended=res;au.onerror=res;au.play().catch(res)});
+}
+const czekaj=ms=>new Promise(r=>setTimeout(r,ms));
+async function petlaGry(){
+  const moj=++token;
+  while(gra&&moj===token){
+    odwr=false;pokaz();await odtworz(pierwsza());if(!gra||moj!==token)return;
+    await czekaj(parseFloat(S.pauza)*1000/parseFloat(S.tempo));if(!gra||moj!==token)return;
+    odwr=true;pokaz();
+    for(let r=0;r<parseInt(S.powtorzEn);r++){await odtworz(druga());if(!gra||moj!==token)return;await czekaj(700)}
+    await czekaj(800);if(!gra||moj!==token)return;
+    if(i<talia.length-1)i++;else if(S.petla==='1')i=0;else{ustawGre(false);return}
+  }
+}
+function ustawGre(on){gra=on;$('#graj').textContent=on?'❚❚ Pauza':'▶ Odtwarzaj';if(on)petlaGry();else{token++;au.pause()}
+  if('mediaSession' in navigator)navigator.mediaSession.playbackState=on?'playing':'paused'}
+function ruch(d){token++;au.pause();i=(i+d+talia.length)%talia.length;odwr=false;pokaz();if(gra)petlaGry()}
+
+$('#graj').onclick=()=>ustawGre(!gra);
+$('#dalej').onclick=()=>ruch(1);$('#wstecz').onclick=()=>ruch(-1);
+$('#odwroc').onclick=$('#karta').onclick=()=>{if(gra)ustawGre(false);odwr=!odwr;pokaz();odtworz(stronaJez())};
+$('#powtorz').onclick=()=>odtworz(stronaJez());
+$('#karta').onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();$('#odwroc').onclick()}};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;if(e.key==='ArrowRight')ruch(1);if(e.key==='ArrowLeft')ruch(-1)});
+$('#kier').onclick=()=>{S.kier=S.kier==='plen'?'enpl':'plen';store.set('kier',S.kier);$('#kier').textContent=S.kier==='plen'?'PL → EN':'EN → PL';odwr=false;pokaz()};
+$('#mieszaj').onclick=()=>{S.mieszaj=!S.mieszaj;store.set('mieszaj',S.mieszaj);$('#mieszaj').setAttribute('aria-pressed',S.mieszaj);zbudujTalie()};
+$('#zakres').onchange=e=>{S.zakres=e.target.value;store.set('zakres',S.zakres);if(gra)ustawGre(false);zbudujTalie()};
+if('mediaSession' in navigator){
+  navigator.mediaSession.setActionHandler('play',()=>ustawGre(true));
+  navigator.mediaSession.setActionHandler('pause',()=>ustawGre(false));
+  navigator.mediaSession.setActionHandler('nexttrack',()=>ruch(1));
+  navigator.mediaSession.setActionHandler('previoustrack',()=>ruch(-1));
+}
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  for(const s of ['fiszki','lista','podcast'])$('#'+s).hidden=s!==b.dataset.tab;
+});
+const feed=new URL('feed.xml',location.href).href;
+$('#feedUrl').value=feed;
+$('#pcLink').href='https://pca.st/subscribe/'+feed.replace(/^https?:\/\//,'');
+$('#kopiuj').onclick=async()=>{try{await navigator.clipboard.writeText(feed);$('#kopiuj').textContent='Skopiowano'}catch(e){$('#feedUrl').select()}};
+
+function grajJedno(src){au.src=src;au.playbackRate=parseFloat(S.tempo);au.play().catch(()=>{})}
+(async()=>{
+  $('#kier').textContent=S.kier==='plen'?'PL → EN':'EN → PL';$('#mieszaj').setAttribute('aria-pressed',S.mieszaj);
+  try{KARTY=await (await fetch('karty.json',{cache:'no-cache'})).json()}catch(e){KARTY=[]}
+  $('#licznik').textContent=KARTY.length+' fiszek';
+  const tyg=[...new Set(KARTY.map(k=>k.t))].sort().reverse();
+  $('#zakres').innerHTML='<option value="all">Wszystkie ('+KARTY.length+')</option>'+tyg.map((t,n)=>'<option value="'+t+'">'+(n===0?'Najnowsze: ':'')+'tydzień '+t+' ('+KARTY.filter(k=>k.t===t).length+')</option>').join('');
+  if(S.zakres!=='all'&&!tyg.includes(S.zakres))S.zakres='all';
+  $('#zakres').value=S.zakres;
+  if(!KARTY.length){$('#fiszki').insertAdjacentHTML('afterbegin','<p class="empty">Jeszcze nie ma fiszek. Pojawią się po pierwszym wklejeniu eksportu z Quizletu.</p>')}
+  zbudujTalie();
+  const ul=$('#listaUl');
+  KARTY.slice().reverse().forEach(k=>{const li=document.createElement('li');
+    li.innerHTML='<span></span><span class="en"></span><span><button aria-label="PL">🔊</button><button aria-label="EN">🔊</button></span>';
+    li.children[0].textContent=k.pl;li.children[1].textContent=k.en;
+    const [b1,b2]=li.querySelectorAll('button');b1.onclick=()=>grajJedno(k.apl);b2.onclick=()=>grajJedno(k.aen);ul.appendChild(li)});
+  try{const od=await (await fetch('odcinki.json',{cache:'no-cache'})).json();
+    $('#odcinki').innerHTML=od.map(o=>'<div class="box"><b></b><span class="muted small"> · '+Math.round(o.sek/60)+' min</span><audio controls preload="none"></audio></div>').join('');
+    [...$('#odcinki').children].forEach((d,n)=>{d.querySelector('b').textContent=od[n].tytul;d.querySelector('audio').src=od[n].url});
+  }catch(e){}
+})();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
