@@ -1,5 +1,5 @@
 // Fiszki Manchester: offline. Karty i lista odcinków najpierw z sieci, nagrania i powłoka z pamięci.
-const C='mch-v1';
+const C='mch-v2';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','index.html','manifest.webmanifest','icon-192.png'])));self.skipWaiting()});
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',e=>{
