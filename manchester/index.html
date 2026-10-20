@@ -51,6 +51,8 @@ button.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(-
 .card.en .side{background:var(--panel);color:var(--en)}
 .card .txt{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(1.6rem,7vw,2.4rem);line-height:1.2;padding:18px 0;overflow-wrap:anywhere}
 .card.en .txt{color:var(--en)}
+.card .maly{font-size:1rem;line-height:1.4;color:var(--muted);margin-top:14px}
+ul.list small{display:block;color:var(--muted);font-size:.85rem}
 .card .hint{text-align:center;font-size:.8rem;color:var(--muted)}
 .controls{display:grid;grid-template-columns:1fr 1fr 1.4fr 1fr 1fr;gap:8px}
 .controls button{font-size:1.25rem}
@@ -91,7 +93,7 @@ a{color:var(--accent)}
   </div>
   <div class="card" id="karta" tabindex="0" aria-live="polite">
     <div class="meta"><span class="side" id="strona">PL</span><span id="pozycja"></span></div>
-    <div class="txt" id="tekst"></div>
+    <div class="txt"><div><div id="tekst"></div><div class="maly" id="maly"></div></div></div>
     <div class="hint">Dotknij, aby odwrócić</div>
   </div>
   <div class="bar"><i id="pasek"></i></div>
@@ -142,8 +144,8 @@ const au=$('#au');
 const S={zakres:store.get('zakres','all'),kier:store.get('kier','plen'),mieszaj:store.get('mieszaj',false),pauza:store.get('pauza','3'),tempo:store.get('tempo','1'),petla:store.get('petla','1'),powtorzEn:store.get('powtorzEn','1')};
 for(const k of ['pauza','tempo','petla','powtorzEn']){const el=$('#'+k);el.value=S[k];el.onchange=()=>{S[k]=el.value;store.set(k,el.value)}}
 
-function pierwsza(){return S.kier==='plen'?'pl':'en'}
-function druga(){return S.kier==='plen'?'en':'pl'}
+function pierwsza(){return S.kier==='plen'?'f':'b'}
+function druga(){return S.kier==='plen'?'b':'f'}
 function biezaca(){return talia[i]}
 function stronaJez(){return odwr?druga():pierwsza()}
 
@@ -156,13 +158,14 @@ function pokaz(){
   const k=biezaca(),karta=$('#karta');
   if(!k){$('#tekst').textContent='Brak fiszek';$('#pozycja').textContent='';return}
   const j=stronaJez();
-  karta.classList.toggle('en',j==='en');
-  $('#strona').textContent=j.toUpperCase();
+  karta.classList.toggle('en',j==='b');
+  $('#strona').textContent=j==='f'?k.lf:k.lb;
   $('#tekst').textContent=k[j];
+  $('#maly').textContent=j==='b'?(k.bs||''):'';
   $('#pozycja').textContent=(i+1)+' / '+talia.length;
   $('#pasek').style.width=((i+1)/talia.length*100)+'%';
   store.set('poz_'+S.zakres,i);
-  if('mediaSession' in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:k.pl+' — '+k.en,artist:'Fiszki Manchester',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]})}
+  if('mediaSession' in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:k.f+' — '+k.b,artist:'Fiszki Manchester',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]})}
 }
 function odtworz(j){
   const k=biezaca();if(!k)return Promise.resolve();
@@ -222,8 +225,9 @@ function grajJedno(src){au.src=src;au.playbackRate=parseFloat(S.tempo);au.play()
   const ul=$('#listaUl');
   KARTY.slice().reverse().forEach(k=>{const li=document.createElement('li');
     li.innerHTML='<span></span><span class="en"></span><span><button aria-label="PL">🔊</button><button aria-label="EN">🔊</button></span>';
-    li.children[0].textContent=k.pl;li.children[1].textContent=k.en;
-    const [b1,b2]=li.querySelectorAll('button');b1.onclick=()=>grajJedno(k.apl);b2.onclick=()=>grajJedno(k.aen);ul.appendChild(li)});
+    li.children[0].textContent=k.f;li.children[1].textContent=k.b;
+    if(k.bs){const sm=document.createElement('small');sm.textContent=k.bs;li.children[1].appendChild(sm)}
+    const [b1,b2]=li.querySelectorAll('button');b1.onclick=()=>grajJedno(k.af);b2.onclick=()=>grajJedno(k.ab);ul.appendChild(li)});
   try{const od=await (await fetch('odcinki.json',{cache:'no-cache'})).json();
     $('#odcinki').innerHTML=od.map(o=>'<div class="box"><b></b><span class="muted small"> · '+Math.round(o.sek/60)+' min</span><audio controls preload="none"></audio></div>').join('');
     [...$('#odcinki').children].forEach((d,n)=>{d.querySelector('b').textContent=od[n].tytul;d.querySelector('audio').src=od[n].url});
