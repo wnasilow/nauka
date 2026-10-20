@@ -90,6 +90,7 @@ a{color:var(--accent)}
     <select id="zakres" aria-label="Zakres"></select>
     <button class="btn" id="kier" title="Kierunek">PL → EN</button>
     <button class="btn" id="mieszaj" aria-pressed="false">Wymieszaj</button>
+    <button class="btn" id="wycisz" aria-pressed="false">🔊 Dźwięk</button>
   </div>
   <div class="card" id="karta" tabindex="0" aria-live="polite">
     <div class="meta"><span class="side" id="strona">PL</span><span id="pozycja"></span></div>
@@ -141,7 +142,7 @@ const $=s=>document.querySelector(s);
 const store={get(k,d){try{const v=localStorage.getItem('mch_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('mch_'+k,JSON.stringify(v))}catch(e){}}};
 let KARTY=[],talia=[],i=0,odwr=false,gra=false,token=0;
 const au=$('#au');
-const S={zakres:store.get('zakres','all'),kier:store.get('kier','plen'),mieszaj:store.get('mieszaj',false),pauza:store.get('pauza','3'),tempo:store.get('tempo','1'),petla:store.get('petla','1'),powtorzEn:store.get('powtorzEn','1')};
+const S={zakres:store.get('zakres','all'),kier:store.get('kier','plen'),mieszaj:store.get('mieszaj',false),pauza:store.get('pauza','3'),tempo:store.get('tempo','1'),petla:store.get('petla','1'),powtorzEn:store.get('powtorzEn','1'),wycisz:store.get('wycisz',false)};
 for(const k of ['pauza','tempo','petla','powtorzEn']){const el=$('#'+k);el.value=S[k];el.onchange=()=>{S[k]=el.value;store.set(k,el.value)}}
 
 function pierwsza(){return S.kier==='plen'?'f':'b'}
@@ -167,11 +168,14 @@ function pokaz(){
   store.set('poz_'+S.zakres,i);
   if('mediaSession' in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:k.f+' — '+k.b,artist:'Fiszki Manchester',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]})}
 }
+const czekaj=ms=>new Promise(r=>setTimeout(r,ms));
+function pokazWycisz(){$('#wycisz').textContent=S.wycisz?'🔇 Wyciszone':'🔊 Dźwięk';$('#wycisz').setAttribute('aria-pressed',S.wycisz)}
 function odtworz(j){
   const k=biezaca();if(!k)return Promise.resolve();
+  if(S.wycisz)return czekaj((900+45*String(k[j]+(j==='b'?(k.bs||''):'')).length)/parseFloat(S.tempo));
   return new Promise(res=>{au.src=k['a'+j];au.playbackRate=parseFloat(S.tempo);au.onended=res;au.onerror=res;au.play().catch(res)});
 }
-const czekaj=ms=>new Promise(r=>setTimeout(r,ms));
+
 async function petlaGry(){
   const moj=++token;
   while(gra&&moj===token){
@@ -190,7 +194,8 @@ function ruch(d){token++;au.pause();i=(i+d+talia.length)%talia.length;odwr=false
 $('#graj').onclick=()=>ustawGre(!gra);
 $('#dalej').onclick=()=>ruch(1);$('#wstecz').onclick=()=>ruch(-1);
 $('#odwroc').onclick=$('#karta').onclick=()=>{if(gra)ustawGre(false);odwr=!odwr;pokaz();odtworz(stronaJez())};
-$('#powtorz').onclick=()=>odtworz(stronaJez());
+$('#powtorz').onclick=()=>{if(S.wycisz){S.wycisz=false;store.set('wycisz',false);pokazWycisz()}odtworz(stronaJez())};
+$('#wycisz').onclick=()=>{S.wycisz=!S.wycisz;store.set('wycisz',S.wycisz);if(S.wycisz)au.pause();pokazWycisz()};
 $('#karta').onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();$('#odwroc').onclick()}};
 document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;if(e.key==='ArrowRight')ruch(1);if(e.key==='ArrowLeft')ruch(-1)});
 $('#kier').onclick=()=>{S.kier=S.kier==='plen'?'enpl':'plen';store.set('kier',S.kier);$('#kier').textContent=S.kier==='plen'?'PL → EN':'EN → PL';odwr=false;pokaz()};
@@ -211,9 +216,9 @@ $('#feedUrl').value=feed;
 $('#pcLink').href='https://pca.st/subscribe/'+feed.replace(/^https?:\/\//,'');
 $('#kopiuj').onclick=async()=>{try{await navigator.clipboard.writeText(feed);$('#kopiuj').textContent='Skopiowano'}catch(e){$('#feedUrl').select()}};
 
-function grajJedno(src){au.src=src;au.playbackRate=parseFloat(S.tempo);au.play().catch(()=>{})}
+function grajJedno(src){if(S.wycisz){S.wycisz=false;store.set('wycisz',false);pokazWycisz()}au.src=src;au.playbackRate=parseFloat(S.tempo);au.play().catch(()=>{})}
 (async()=>{
-  $('#kier').textContent=S.kier==='plen'?'PL → EN':'EN → PL';$('#mieszaj').setAttribute('aria-pressed',S.mieszaj);
+  $('#kier').textContent=S.kier==='plen'?'PL → EN':'EN → PL';$('#mieszaj').setAttribute('aria-pressed',S.mieszaj);pokazWycisz();
   try{KARTY=await (await fetch('karty.json',{cache:'no-cache'})).json()}catch(e){KARTY=[]}
   $('#licznik').textContent=KARTY.length+' fiszek';
   const tyg=[...new Set(KARTY.map(k=>k.t))].sort().reverse();
