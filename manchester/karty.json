@@ -334,5 +334,53 @@
 "t": "2026-43",
 "af": "a/pl_43d9ba6d912b.mp3",
 "ab": "a/en_fb73455bf972.mp3"
+},
+{
+"id": "fe65c272e489",
+"f": "rozpowszechnianie",
+"lf": "PL",
+"b": "dissemination",
+"bs": "the act of spreading something, especially information, widely; circulation",
+"lb": "EN",
+"d": "2026-10-21",
+"t": "2026-43",
+"af": "a/pl_97823f7228b7.mp3",
+"ab": "a/en_4994b46f0aca.mp3"
+},
+{
+"id": "defe4a008986",
+"f": "zakaz sądowy",
+"lf": "PL",
+"b": "injunction",
+"bs": "An order which legally prevents something",
+"lb": "EN",
+"d": "2026-10-21",
+"t": "2026-43",
+"af": "a/pl_279d44d9a1b2.mp3",
+"ab": "a/en_b3e72debf6ed.mp3"
+},
+{
+"id": "07ae85c17a26",
+"f": "rzekomy",
+"lf": "PL",
+"b": "purported",
+"bs": "alleged; claimed; reputed or rumored",
+"lb": "EN",
+"d": "2026-10-21",
+"t": "2026-43",
+"af": "a/pl_0a74be538cdc.mp3",
+"ab": "a/en_065ae3186875.mp3"
+},
+{
+"id": "31dafde89131",
+"f": "rozprzestrzeniać się",
+"lf": "PL",
+"b": "proliferate",
+"bs": "to reproduce, increase, or spread rapidly",
+"lb": "EN",
+"d": "2026-10-21",
+"t": "2026-43",
+"af": "a/pl_2408d525f064.mp3",
+"ab": "a/en_861a238daadf.mp3"
 }
 ]
