@@ -6,12 +6,12 @@
 <itunes:author>Wojtek</itunes:author><itunes:block>Yes</itunes:block><itunes:explicit>false</itunes:explicit>
 <itunes:image href="https://wnasilow.github.io/nauka/manchester/icon-1400.png"/><image><url>https://wnasilow.github.io/nauka/manchester/icon-1400.png</url><title>Fiszki Manchester</title><link>https://wnasilow.github.io/nauka/manchester/</link></image>
 <itunes:category text="Education"><itunes:category text="Language Learning"/></itunes:category>
-<lastBuildDate>Wed, 21 Oct 2026 15:16:29 +0000</lastBuildDate>
-<item><title>Wszystkie słówka (32, stan na 2026-10-21)</title><description>Cały zestaw od początku. Ten odcinek jest podmieniany co tydzień.</description>
-<guid isPermaLink="false">manchester-wszystkie-2026-10-21-da250a.mp3</guid><pubDate>Wed, 21 Oct 2026 15:16:29 +0000</pubDate>
-<enclosure url="https://github.com/wnasilow/nauka/releases/download/manchester-audio/manchester-wszystkie-2026-10-21-da250a.mp3" length="2885997" type="audio/mpeg"/>
-<itunes:duration>480</itunes:duration><itunes:explicit>false</itunes:explicit></item><item><title>Tydzień 2026-43 – 32 nowe słówka</title><description>Fiszki dodane w tym tygodniu: po polsku, pauza na odpowiedź, angielskie wyrażenie z definicją.</description>
-<guid isPermaLink="false">manchester-tydzien-2026-43-da250a.mp3</guid><pubDate>Wed, 21 Oct 2026 15:16:18 +0000</pubDate>
-<enclosure url="https://github.com/wnasilow/nauka/releases/download/manchester-audio/manchester-tydzien-2026-43-da250a.mp3" length="2881389" type="audio/mpeg"/>
-<itunes:duration>480</itunes:duration><itunes:explicit>false</itunes:explicit></item>
+<lastBuildDate>Thu, 22 Oct 2026 07:43:53 +0000</lastBuildDate>
+<item><title>Wszystkie słówka (32, stan na 2026-10-22)</title><description>Cały zestaw od początku. Ten odcinek jest podmieniany co tydzień.</description>
+<guid isPermaLink="false">manchester-wszystkie-2026-10-22-fff28d.mp3</guid><pubDate>Thu, 22 Oct 2026 07:43:53 +0000</pubDate>
+<enclosure url="https://wnasilow.github.io/nauka/manchester/odc/manchester-wszystkie-2026-10-22-fff28d.mp3" length="2860653" type="audio/mpeg"/>
+<itunes:duration>476</itunes:duration><itunes:explicit>false</itunes:explicit></item><item><title>Tydzień 2026-43 – 32 nowe słówka</title><description>Fiszki dodane w tym tygodniu: po polsku, pauza na odpowiedź, angielskie wyrażenie z definicją.</description>
+<guid isPermaLink="false">manchester-tydzien-2026-43-fff28d.mp3</guid><pubDate>Thu, 22 Oct 2026 07:43:45 +0000</pubDate>
+<enclosure url="https://wnasilow.github.io/nauka/manchester/odc/manchester-tydzien-2026-43-fff28d.mp3" length="2856045" type="audio/mpeg"/>
+<itunes:duration>475</itunes:duration><itunes:explicit>false</itunes:explicit></item>
 </channel></rss>
