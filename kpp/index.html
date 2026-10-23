@@ -161,6 +161,7 @@ function load(){ try { const r = localStorage.getItem("kpp-state"); if (r) retur
 let dbDoc = null, saveTimer = null;
 function save(){
   try { localStorage.setItem("kpp-state", JSON.stringify(S)); } catch(e){}
+  znacz(); wyslij();
   if (!dbDoc) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
@@ -169,6 +170,67 @@ function save(){
   }, 700);
 }
 function setSync(t){ document.getElementById("sync").textContent = t; }
+// ---------- synchronizacja między urządzeniami (serwer jak /nauka/boks/ i quiz) ----------
+// Stan spłaszczony do kluczy ("done:3", "wrong:44", "exams:<data>", "start"), każdy z czasem zmiany; scalanie per klucz, nowszy wygrywa.
+// Klucz synchronizacji wspólny dla stron /nauka/ (localStorage "nauka_sync_klucz", ustawiany linkiem #sync=…).
+const SYNC_API = "https://nieciecz.taile0bd49.ts.net:8443/sync/", SYNC_SERWIS = "kpp_kurs", LSM = "kpp-sync-meta";
+const syncHash = location.hash.match(/sync=([\w-]+)/);
+if (syncHash) { try { localStorage.setItem("nauka_sync_klucz", syncHash[1]); } catch(e){} history.replaceState(null, "", location.pathname); }
+let SYNC_KLUCZ = null; try { SYNC_KLUCZ = localStorage.getItem("nauka_sync_klucz"); } catch(e){}
+let meta = {}; try { meta = JSON.parse(localStorage.getItem(LSM) || "{}") || {}; } catch(e){}
+function plaski(st){
+  const o = {start: st.start};
+  for (const g of ["done", "watched", "tasks", "wrong", "best"]) for (const [k, v] of Object.entries(st[g] || {})) o[g + ":" + k] = v;
+  (st.exams || []).forEach(e => o["exams:" + e.date] = e);
+  return o;
+}
+function zPlaskiego(o){
+  const st = structuredClone(DEFAULT);
+  for (const [k, v] of Object.entries(o)) {
+    if (v == null) continue;
+    if (k === "start") { st.start = v; continue; }
+    const i = k.indexOf(":"), g = k.slice(0, i), id = k.slice(i + 1);
+    if (g === "exams") st.exams.push(v); else if (st[g]) st[g][id] = v;
+  }
+  st.exams.sort((a, b) => a.date < b.date ? -1 : 1);
+  return st;
+}
+// zapamiętaj czas zmiany kluczy, które różnią się od ostatniego stanu (usunięte = null)
+function znacz(){
+  const teraz = plaski(S), t = Date.now(), poprz = meta.v || {}, m = meta.t || {};
+  for (const k of new Set([...Object.keys(teraz), ...Object.keys(poprz)]))
+    if (JSON.stringify(teraz[k] ?? null) !== JSON.stringify(poprz[k] ?? null) || !(k in m)) m[k] = meta.init ? t : 1;   // pierwsze uruchomienie: t=1, serwer wygrywa spory, nic lokalnego nie ginie
+  meta = {v: teraz, t: m, init: 1};
+  try { localStorage.setItem(LSM, JSON.stringify(meta)); } catch(e){}
+}
+const doSync = () => { const o = {}; for (const [k, t] of Object.entries(meta.t || {})) o[k] = {v: (meta.v || {})[k] ?? null, t}; return o; };
+function scal(a, b){ const o = {...a}; for (const [k, v] of Object.entries(b || {})) if (!o[k] || (v.t || 0) > (o[k].t || 0)) o[k] = v; return o; }
+function przyjmij(o){
+  const v = {}, t = {}; for (const [k, x] of Object.entries(o)) { v[k] = x.v; t[k] = x.t; }
+  meta = {v, t, init: 1}; S = zPlaskiego(v);
+  try { localStorage.setItem(LSM, JSON.stringify(meta)); localStorage.setItem("kpp-state", JSON.stringify(S)); } catch(e){}
+}
+const godz = () => new Date().toLocaleTimeString("pl", {hour: "2-digit", minute: "2-digit"});
+async function pobierz(){ const r = await fetch(SYNC_API + SYNC_KLUCZ + "/" + SYNC_SERWIS, {cache: "no-store"}); if (!r.ok) throw new Error(r.status); return (await r.json()).v || {}; }
+let trwa = false, znowu = false;
+async function wyslij(){
+  if (!SYNC_KLUCZ) return;
+  if (trwa) { znowu = true; return; }
+  trwa = true;
+  try {
+    const przed = JSON.stringify(S);
+    const st = scal(doSync(), await pobierz());
+    przyjmij(st);
+    const r = await fetch(SYNC_API + SYNC_KLUCZ + "/" + SYNC_SERWIS, {method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({v: st})});
+    if (!r.ok) throw new Error(r.status);
+    if (JSON.stringify(S) !== przed && typeof render === "function") render();
+    setSync("Postęp zsynchronizowany " + godz());
+  } catch(e) { setSync("Offline, postęp zapisany w tej przeglądarce"); }
+  trwa = false;
+  if (znowu) { znowu = false; wyslij(); }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) wyslij(); });
+
 (async () => {
   try {
     if (!window.claude?.use) return;
@@ -478,6 +540,8 @@ function startMetro(rate, beat, pulse){
 function stopMetro(){ if (metro) { clearInterval(metro.id); try { metro.ctx && metro.ctx.close(); } catch(e) {} metro = null; } }
 
 render();
+znacz();
+if (SYNC_KLUCZ) wyslij(); else setSync("Postęp w tej przeglądarce (synchronizacja: otwórz raz link z #sync=…)");
 </script>
 
 </body>
