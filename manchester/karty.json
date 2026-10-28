@@ -382,5 +382,89 @@
 "t": "2026-43",
 "af": "a/pl_2408d525f064.mp3",
 "ab": "a/en_861a238daadf.mp3"
+},
+{
+"id": "b07ab9ee467b",
+"f": "nietykalny, święty",
+"lf": "PL",
+"b": "sacrosanct",
+"bs": "sacred",
+"lb": "EN",
+"d": "2026-10-28",
+"t": "2026-44",
+"af": "a/pl_511b2b99311e.mp3",
+"ab": "a/en_2b3c11222bad.mp3"
+},
+{
+"id": "5b130b1c2c17",
+"f": "zachowywać optymizm, nie tracić nadziei",
+"lf": "PL",
+"b": "Be sanguine about something",
+"bs": "optimistic or positive, especially in an apparently bad or difficult situation",
+"lb": "EN",
+"d": "2026-10-28",
+"t": "2026-44",
+"af": "a/pl_190f947405bf.mp3",
+"ab": "a/en_92babf9ec98f.mp3"
+},
+{
+"id": "34f3aec20b23",
+"f": "zachowywać ostrożność",
+"lf": "PL",
+"b": "Be circumspect",
+"bs": "cautious",
+"lb": "EN",
+"d": "2026-10-28",
+"t": "2026-44",
+"af": "a/pl_686af348f910.mp3",
+"ab": "a/en_695d697d82f3.mp3"
+},
+{
+"id": "ebd2ff06c851",
+"f": "kopać sobie grób",
+"lf": "PL",
+"b": "Be a rod for your own back",
+"bs": "you create the thing that will hurt you",
+"lb": "EN",
+"d": "2026-10-28",
+"t": "2026-44",
+"af": "a/pl_b55ba91e06b2.mp3",
+"ab": "a/en_f576843758a3.mp3"
+},
+{
+"id": "2a6a7a564a23",
+"f": "sprawa wciąż otwarta",
+"lf": "PL",
+"b": ". The jury is still out",
+"bs": "used when you are saying that something is still not certain",
+"lb": "EN",
+"d": "2026-10-28",
+"t": "2026-44",
+"af": "a/pl_851eaeba22e7.mp3",
+"ab": "a/en_2b8a4eca6d45.mp3"
+},
+{
+"id": "f58d79cd2ce1",
+"f": "wygadać się",
+"lf": "PL",
+"b": "Let something slip",
+"bs": "to give somebody information that is supposed to be secret",
+"lb": "EN",
+"d": "2026-10-28",
+"t": "2026-44",
+"af": "a/pl_e7614ceea2d7.mp3",
+"ab": "a/en_8b46ff487549.mp3"
+},
+{
+"id": "8d545f076919",
+"f": "podstępny, zdradliwy",
+"lf": "PL",
+"b": "insidious",
+"bs": "proceeding in a gradual, subtle way, but with harmful effects",
+"lb": "EN",
+"d": "2026-10-28",
+"t": "2026-44",
+"af": "a/pl_1dfc4371bde4.mp3",
+"ab": "a/en_396927b55536.mp3"
 }
 ]
