@@ -129,7 +129,7 @@ const NOTES = {};
 const QBY = Object.fromEntries(Q.map(q => [q.nr, q]));
 const POOL = Q.map(q => q.nr);
 const IMG = {255: "img/255.jpg", 256: "img/256.jpg"};   // rysunki z oficjalnej bazy CEM 2024
-const SERIA = 20, OPANOWANE = 2, EX_N = 30, EX_MIN = 30, PROG = 70, CEL = 80;
+const OPANOWANE = 2, EX_N = 30, EX_MIN = 30, PROG = 70, CEL = 80;
 
 // ---------- stan ----------
 // stan["q<nr>"] = {n: odpowiedzi, ok: dobre, s: dobre z rzędu, w: {litera: ile razy}, l: ms ostatniej, t: ms zmiany}
@@ -254,8 +254,8 @@ function renderHome(v) {
   v.append(h("div", {class: "bar", style: "margin:14px 0 22px", title: "opanowane / raz dobrze / do poprawy / nie było"},
     h("i", {style: "width:" + pc(op) + ";background:var(--ok)"}), h("i", {style: "width:" + pc(rest) + ";background:var(--warn)"}), h("i", {style: "width:" + pc(zle) + ";background:var(--bad)"})));
   v.append(h("div", {class: "block"}, h("h3", {}, "Nauka"),
-    h("p", {style: "margin:0"}, "Serie po " + SERIA + " pytań. Po każdej odpowiedzi widzisz, czy była dobra, i możesz sprawdzić, dlaczego. Najpierw wracają pytania, na które odpowiedziałeś źle, potem te, których jeszcze nie było, na końcu najdawniej powtarzane. Pytanie przestaje wracać po " + OPANOWANE + " dobrych odpowiedziach z rzędu."),
-    h("div", {class: "row"}, h("button", {class: "btn primary", onclick: () => { learnState = null; go("learn"); }}, "Zacznij serię"))));
+    h("p", {style: "margin:0"}, "Tryb ciągły, bez serii. Po każdej odpowiedzi widzisz, czy była dobra, i możesz sprawdzić, dlaczego. Przeplatają się pytania, na które odpowiedziałeś źle, nowe i najdawniej powtarzane; błędne wracają po kilku pytaniach, aż odpowiesz dobrze " + OPANOWANE + " razy z rzędu. Możesz przerwać w każdej chwili i wrócić do tego samego pytania."),
+    h("div", {class: "row"}, h("button", {class: "btn primary", onclick: () => go("learn")}, (stan.nauka && stan.nauka.q && stan.nauka.q.length) ? "Wróć do nauki" : "Zacznij naukę"))));
   v.append(h("div", {class: "block"}, h("h3", {}, "Symulacja egzaminu"),
     h("p", {style: "margin:0"}, EX_N + " pytań losowanych z całej bazy, " + EX_MIN + " minut. Wynik i poprawne odpowiedzi dopiero na końcu. Zaliczenie od " + PROG + "%, cel " + CEL + "%."),
     h("div", {class: "row"}, h("button", {class: "btn primary", onclick: () => go("exam")}, ls.get(LSX) ? "Wróć do trwającej symulacji" : "Rozpocznij symulację"))));
@@ -271,52 +271,62 @@ function renderHome(v) {
   if (!KLUCZ) v.append(h("p", {class: "muted"}, "Synchronizacja między urządzeniami włącza się, gdy raz otworzysz stronę z linkiem zawierającym klucz (#sync=…)."));
 }
 
-// --- nauka ---
-let learnState = null;
-function nowaSeria(tylkoBledy) {
-  const zle = shuffle(POOL.filter(doPoprawy)).sort((a, b) => P(a).l - P(b).l);
-  if (tylkoBledy) return zle.slice(0, SERIA);
-  const nowe = shuffle(POOL.filter(nr => !P(nr).n));
-  const stare = shuffle(POOL.filter(nr => P(nr).n && !doPoprawy(nr))).sort((a, b) => (opanowane(a) - opanowane(b)) || (P(a).l - P(b).l));
-  // do 12 błędów, reszta nowe, potem najdawniej powtarzane
-  const ids = [...zle.slice(0, 12), ...nowe, ...stare, ...zle.slice(12)];
-  return shuffle([...new Set(ids)].slice(0, SERIA));
+// --- nauka (tryb ciągły) ---
+// stan.nauka = {q: [nr…] kolejka (q[0] = bieżące), odp, pokaz, tylko: null|"bledy"|"egzamin", dzis: {d, n, ok}, t}
+const DZIS = () => new Date().toISOString().slice(0, 10);
+function nauka() {
+  if (!stan.nauka || !Array.isArray(stan.nauka.q)) stan.nauka = {q: [], odp: null, pokaz: false, tylko: null, dzis: {d: DZIS(), n: 0, ok: 0}, t: Date.now()};
+  const n = stan.nauka; if (!n.dzis || n.dzis.d !== DZIS()) n.dzis = {d: DZIS(), n: 0, ok: 0};
+  return n;
 }
+function kandydaci(wyklucz) {
+  const w = new Set(wyklucz);
+  const zle = shuffle(POOL.filter(nr => doPoprawy(nr) && !w.has(nr))).sort((a, b) => P(a).l - P(b).l);
+  const nowe = shuffle(POOL.filter(nr => !P(nr).n && !w.has(nr)));
+  const stare = shuffle(POOL.filter(nr => P(nr).n && !doPoprawy(nr) && !w.has(nr))).sort((a, b) => (opanowane(a) - opanowane(b)) || (P(a).l - P(b).l));
+  // mieszanka: na 10 pytań ok. 4 błędne (jeśli są), reszta nowe, na końcu najdawniej powtarzane
+  return shuffle([...zle.slice(0, 4), ...nowe.slice(0, 6)]).concat(zle.slice(4), nowe.slice(6), stare);
+}
+function dopelnij(n) {
+  if (n.tylko) return false;
+  let zm = false;
+  while (n.q.length < 10) { const k = kandydaci(n.q); if (!k.length) break; n.q.push(...k.slice(0, 10 - n.q.length)); zm = true; }
+  return zm;
+}
+function startNauki(q, tylko) { const n = nauka(); n.q = q; n.tylko = tylko; n.odp = null; n.pokaz = false; n.t = Date.now(); dopelnij(n); zmiana(); go("learn"); }
 function renderLearn(v) {
-  if (!learnState) learnState = {ids: nowaSeria(false), pos: 0, ok: 0, odp: null, powt: {}};
-  const st = learnState;
+  const n = nauka(); if (!n.odp && dopelnij(n)) { n.t = Date.now(); zmiana(); }
   const b = h("div", {class: "block quiz"}); v.append(b);
-  if (!st.ids.length) { b.append(h("div", {class: "empty"}, "Brak pytań do powtórki.")); return; }
-  if (st.pos >= st.ids.length) {
-    const n = st.ids.length - Object.keys(st.powt).length, pct = Math.round(st.ok / n * 100);
-    b.append(h("div", {class: "result"}, h("span", {class: "big mono", style: "color:" + kolor(pct)}, pct + "%"),
-      h("div", {}, h("strong", {}, st.ok + " z " + n + " dobrze za pierwszym razem"), h("div", {class: "muted"}, "Do poprawy w całej bazie: " + POOL.filter(doPoprawy).length + ". Te pytania wrócą w kolejnych seriach."))),
-      h("div", {class: "row"}, h("button", {class: "btn primary", onclick: () => { learnState = null; render(); }}, "Następna seria"),
-        h("button", {class: "btn", onclick: () => go("home")}, "Start")));
+  if (!n.q.length) {
+    b.append(h("div", {class: "empty"}, n.tylko ? "Wszystkie pytania z tej powtórki przerobione." : "Brak pytań do nauki."));
+    b.append(h("div", {class: "row"}, h("button", {class: "btn primary", onclick: () => startNauki([], null)}, "Wróć do nauki ciągłej"), h("button", {class: "btn", onclick: () => go("home")}, "Start")));
     return;
   }
-  const nr = st.ids[st.pos], q = QBY[nr], p = P(nr), powtorka = st.powt[st.pos];
-  b.append(h("div", {class: "qhead"}, h("span", {class: "mono"}, "Pytanie " + (st.pos + 1) + " / " + st.ids.length),
-    h("span", {}, powtorka ? h("span", {class: "tag"}, "jeszcze raz w tej serii") : p.n ? (doPoprawy(nr) ? h("span", {class: "tag"}, "było źle " + (p.n - p.ok) + "×") : h("span", {class: "tag ok"}, "było dobrze " + p.ok + "×")) : "nowe",
+  const nr = n.q[0], q = QBY[nr], p = P(nr), d = n.dzis;
+  const zleWBazie = POOL.filter(doPoprawy).length;
+  b.append(h("div", {class: "qhead"},
+    h("span", {class: "mono"}, "Dziś " + d.n + (d.n ? " (" + Math.round(d.ok / d.n * 100) + "% dobrze)" : "") + " · do poprawy " + zleWBazie),
+    h("span", {}, n.tylko ? h("span", {class: "tag"}, n.tylko === "egzamin" ? "błędy z symulacji" : "same błędy") : p.n ? (doPoprawy(nr) ? h("span", {class: "tag"}, "było źle " + (p.n - p.ok) + "×") : h("span", {class: "tag ok"}, "było dobrze " + p.ok + "×")) : h("span", {class: "tag ok"}, "nowe"),
       h("span", {class: "mono"}, "  nr " + nr))));
   b.append(tresc(q));
-  b.append(opcje(q, {wybrana: st.odp, pokazKlucz: !!st.odp, onclick: st.odp ? null : k => {
-    st.odp = k;
+  b.append(opcje(q, {wybrana: n.odp, pokazKlucz: !!n.odp, onclick: n.odp ? null : k => {
+    n.odp = k; n.t = Date.now();
     const dobrze = zapisz(nr, k);
-    if (dobrze && !powtorka) st.ok++;
-    // błędne pytanie wraca jeszcze raz pod koniec tej serii (raz)
-    if (!dobrze && !powtorka) { st.ids.push(nr); st.powt[st.ids.length - 1] = 1; }
-    st.pokaz = !dobrze;
-    render();
+    d.n++; if (dobrze) d.ok++;
+    // błędne pytanie wraca za 4–7 pytań (nie wraca w trybie „same błędy” z pustą kolejką: wtedy na koniec)
+    if (!dobrze) { const i = Math.min(n.q.length, 4 + Math.floor(Math.random() * 4)); if (!n.q.slice(1, i).includes(nr)) n.q.splice(i, 0, nr); }
+    n.pokaz = !dobrze;
+    zmiana(); render();
   }}));
-  if (st.odp) {
-    const dobrze = st.odp === q.correct;
-    const whyBox = h("div", {}); if (st.pokaz) whyBox.append(wyjasnienie(q));
+  if (n.odp) {
+    const dobrze = n.odp === q.correct;
+    const whyBox = h("div", {}); if (n.pokaz) whyBox.append(wyjasnienie(q));
     b.append(h("div", {class: "row spread"}, h("strong", {style: "color:" + (dobrze ? "var(--ok)" : "var(--bad)")}, dobrze ? "Dobrze" : "Źle. Poprawna odpowiedź: " + q.correct),
       h("div", {class: "row"},
-        st.pokaz ? null : h("button", {class: "btn", onclick: () => { st.pokaz = true; render(); }}, "Dlaczego?"),
-        h("button", {class: "btn primary", onclick: () => { st.pos++; st.odp = null; st.pokaz = false; render(); }}, st.pos + 1 < st.ids.length ? "Dalej" : "Wynik"))), whyBox);
+        n.pokaz ? null : h("button", {class: "btn", onclick: () => { n.pokaz = true; render(); }}, "Dlaczego?"),
+        h("button", {class: "btn primary", onclick: () => { n.q.shift(); n.odp = null; n.pokaz = false; n.t = Date.now(); dopelnij(n); zmiana(); render(); }}, "Dalej"))), whyBox);
   }
+  b.append(h("p", {class: "muted", style: "margin:14px 0 0"}, "Tryb ciągły: możesz przerwać w dowolnej chwili, po powrocie zaczniesz od tego pytania (także na innym urządzeniu). Błędne pytania wracają po kilku pytaniach, aż odpowiesz dobrze " + OPANOWANE + " razy z rzędu."));
 }
 
 // --- symulacja ---
@@ -369,7 +379,7 @@ function podsumowanie(b, st) {
     h("div", {}, h("strong", {}, st.ok + " z " + st.ids.length + " · " + (st.pct >= PROG ? "zaliczony" : "niezaliczony") + " (próg " + PROG + "%)"),
       h("div", {class: "muted"}, "Czas " + Math.round(st.sek / 60) + " min. " + (st.zle.length ? st.zle.length + " błędnych pytań trafiło do nauki." : "Bez błędów.")))),
     h("div", {class: "row"}, h("button", {class: "btn primary", onclick: () => { examState = null; render(); }}, "Nowa symulacja"),
-      st.zle.length ? h("button", {class: "btn", onclick: () => { learnState = {ids: shuffle(st.zle), pos: 0, ok: 0, odp: null, powt: {}}; go("learn"); }}, "Ćwicz błędy z tego testu") : null));
+      st.zle.length ? h("button", {class: "btn", onclick: () => startNauki(shuffle(st.zle), "egzamin")}, "Ćwicz błędy z tego testu") : null));
   const g = h("div", {class: "navgrid"});
   st.ids.forEach((nr, i) => g.append(h("button", {class: st.ans[i] === QBY[nr].correct ? "r" : "w", onclick: () => document.getElementById("eq" + i).scrollIntoView({behavior: "smooth"})}, i + 1)));
   b.append(g);
@@ -388,8 +398,8 @@ function renderErrors(v) {
   const ids = POOL.filter(doPoprawy).sort((a, b) => (P(b).n - P(b).ok) - (P(a).n - P(a).ok));
   const naprawione = POOL.filter(nr => P(nr).ok < P(nr).n && !doPoprawy(nr)).length;
   v.append(h("div", {class: "block"}, h("h3", {}, "Moje błędy"),
-    h("p", {style: "margin:0"}, "Pytania, na które odpowiedziałeś źle i jeszcze nie odpowiedziałeś dobrze " + OPANOWANE + " razy z rzędu. Wracają w każdej serii nauki." + (naprawione ? " Poprawione dotąd: " + naprawione + "." : "")),
-    ids.length ? h("div", {class: "row"}, h("button", {class: "btn primary", onclick: () => { learnState = {ids: nowaSeria(true), pos: 0, ok: 0, odp: null, powt: {}}; go("learn"); }}, "Ćwicz same błędy")) : null));
+    h("p", {style: "margin:0"}, "Pytania, na które odpowiedziałeś źle i jeszcze nie odpowiedziałeś dobrze " + OPANOWANE + " razy z rzędu. Wracają w nauce ciągłej po kilku pytaniach." + (naprawione ? " Poprawione dotąd: " + naprawione + "." : "")),
+    ids.length ? h("div", {class: "row"}, h("button", {class: "btn primary", onclick: () => startNauki(shuffle(ids).sort((a, b) => P(a).l - P(b).l), "bledy")}, "Ćwicz same błędy")) : null));
   if (!ids.length) { v.append(h("div", {class: "empty"}, "Brak błędów do poprawy.")); return; }
   const box = h("div", {class: "block"});
   ids.forEach(nr => {
