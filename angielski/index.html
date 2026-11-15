@@ -64,7 +64,6 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td{padding:3px 4px;bo
 </div>
 <script>
 // Dane: zdania z podręczników „Angielski w tłumaczeniach” (Preston Publishing), kopia prywatna właściciela.
-// Pliki z danymi są zakodowane (base64 + XOR), żeby treść książek nie leżała w repo otwartym tekstem.
 const API='https://nieciecz.taile0bd49.ts.net:8443/sync/';
 const SERWIS='angielski',LS='nauka_ang_stan';
 let KLUCZ=null;try{const m=location.hash.match(/sync=([\w-]+)/);if(m){localStorage.setItem('nauka_sync_klucz',m[1]);history.replaceState(null,'',location.pathname)}KLUCZ=localStorage.getItem('nauka_sync_klucz')}catch(e){}
@@ -94,11 +93,15 @@ const zapiszLok=()=>ls.set(LS,JSON.stringify(S));
 // ---------- dane ----------
 let ZD=[],PO={},TYT={};
 function dekoduj(b64){const k='nauka';const bin=atob(b64.trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i)^k.charCodeAt(i%k.length);return JSON.parse(new TextDecoder().decode(u))}
+// Treść książek leży na serwerze nieciecz (usługa nauka-sync, serwisy ang_dane_id i ang_dane_pv), dostępna tylko z kluczem.
+// Kopia w localStorage pozwala ćwiczyć offline i przyspiesza start.
 async function wczytaj(){
- const pliki=[['pv','dane_pv.txt'],['id','dane_id.txt']];
- for(const [z,f] of pliki){
-  try{const r=await fetch(f,{cache:'no-cache'});if(!r.ok)continue;const d=dekoduj(await r.text());
-   TYT[z]=d.t;for(const s of d.s){s.z=z;ZD.push(s);PO[s.id]=s}}catch(e){}
+ for(const z of ['pv','id']){
+  const LK='nauka_ang_dane_'+z;let b64=ls.get(LK);
+  const swiezy=KLUCZ?fetch(API+KLUCZ+'/ang_dane_'+z,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{const d=j&&j.v&&j.v.d;if(d&&d!==ls.get(LK))ls.set(LK,d);return d}).catch(()=>null):Promise.resolve(null);
+  if(!b64)b64=await swiezy;
+  if(!b64)continue;
+  try{const d=dekoduj(b64);TYT[z]=d.t;for(const s of d.s){s.z=z;ZD.push(s);PO[s.id]=s}}catch(e){}
  }
 }
 
@@ -269,7 +272,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(dz(new
 
 (async()=>{
  await wczytaj();
- if(!ZD.length){$('#glowna').textContent='Nie udało się wczytać zdań.';return}
+ if(!ZD.length){$('#glowna').innerHTML=KLUCZ?'Nie udało się pobrać zdań z serwera. Sprawdź połączenie i odśwież stronę.':'Zdania są na serwerze i wymagają klucza. Otwórz raz tę stronę (albo dowolną stronę /nauka/) z linkiem zawierającym #sync=…';return}
  await Promise.race([synchro(),new Promise(r=>setTimeout(r,2500))]);
  ustawienia();zbudujKolejke();nastepne();rysujPostep();pokazCzas();
 })();
