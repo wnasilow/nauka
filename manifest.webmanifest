@@ -16,6 +16,7 @@
   ],
   "shortcuts": [
     {"name": "Lista dnia", "url": "dzis/"},
+    {"name": "Angielski", "url": "angielski/"},
     {"name": "Kurs KPP", "url": "kpp/"},
     {"name": "Boks", "url": "boks/"},
     {"name": "Ćwiczenia", "url": "cwiczenia/"}

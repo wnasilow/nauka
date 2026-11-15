@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="pl"><head><link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#c4122f"><link rel="apple-touch-icon" href="../ikona-192.png"><link rel="icon" href="../ikona-192.png"><script>if('serviceWorker' in navigator)navigator.serviceWorker.register('../sw.js',{scope:'../'})</script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive"><title>Angielski w tłumaczeniach</title>
+<style>
+:root{--bg:#f3f4f2;--panel:#fff;--ink:#1b1f22;--muted:#5d666c;--line:#d9ddda;--accent:#c4122f;--ok:#1f7a3f;--warn:#a86400;--bad:#b3261e;--soft:#eef1ef}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141719;--panel:#1d2124;--ink:#e8eae8;--muted:#9aa3a8;--line:#30363a;--accent:#ff5468;--ok:#4cc77a;--warn:#e0a040;--bad:#ff6b5e;--soft:#252a2d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141719;--panel:#1d2124;--ink:#e8eae8;--muted:#9aa3a8;--line:#30363a;--accent:#ff5468;--ok:#4cc77a;--warn:#e0a040;--bad:#ff6b5e;--soft:#252a2d;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,sans-serif;padding:20px 16px 40px}
+.w{max-width:640px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+h1{margin:0;font-size:1.35rem}.top a{color:var(--muted);font-size:.9rem}
+.sub{color:var(--muted);font-size:.9rem;margin:2px 0 12px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.stat{display:flex;justify-content:space-between;color:var(--muted);font-size:.85rem;margin:6px 0 14px;gap:8px;flex-wrap:wrap}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 16px}
+.src{color:var(--muted);font-size:.8rem;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px}
+.pl{font-size:1.2rem;font-weight:600;margin:0 0 14px}
+textarea{width:100%;min-height:80px;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button{font:inherit;font-size:.95rem;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:10px;padding:9px 14px;cursor:pointer}
+button.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button:disabled{opacity:.5}
+.en{font-size:1.12rem;margin:14px 0 4px;padding:10px 12px;background:var(--soft);border-radius:10px}
+.en .miss{text-decoration:underline 2px var(--bad);text-underline-offset:3px;font-weight:600}
+.you{font-size:.95rem;color:var(--muted);margin:6px 0}.you .bad{color:var(--bad);text-decoration:line-through}
+.score{font-size:.85rem;font-weight:600;margin:4px 0 0}
+.g{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.g button{padding:10px 4px;font-size:.88rem;line-height:1.2}.g small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}
+.g .s{outline:2px solid var(--accent)}
+.done{text-align:center;padding:26px 10px}.done h2{margin:0 0 6px}
+details{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+summary{cursor:pointer;font-weight:600}
+label.f{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0;font-size:.95rem}
+select,input[type=number]{font:inherit;font-size:.95rem;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.small{font-size:.82rem;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}td{padding:3px 4px;border-bottom:1px solid var(--line)}td.n{text-align:right;white-space:nowrap;color:var(--muted)}
+.hist{display:flex;gap:4px;margin-top:8px}.hist div{flex:1;height:26px;border-radius:5px;background:var(--line)}
+.kbd{font-size:.75rem;color:var(--muted)}
+@media (max-width:420px){.g{grid-template-columns:repeat(2,1fr)}}
+</style></head><body><div class="w">
+<div class="top"><h1>Angielski w tłumaczeniach</h1><a href="../">← Nauka</a></div>
+<p class="sub">Codzienna sesja: tłumacz zdania z polskiego, sprawdzaj, oceniaj. Powtórki wracają, gdy zaczynasz zapominać.</p>
+<div class="bar"><i id="pas"></i></div>
+<div class="stat"><span id="czas">0:00 / 20:00</span><span id="licz"></span></div>
+<div id="glowna" class="card">Wczytywanie zdań…</div>
+
+<details id="ust"><summary>Ustawienia</summary>
+<label class="f">Nowych zdań dziennie <input type="number" id="u_nowe" min="0" max="60" step="5"></label>
+<label class="f">Minut dziennie <input type="number" id="u_min" min="5" max="90" step="5"></label>
+<label class="f">Źródło nowych zdań <select id="u_zr"><option value="mix">oba podręczniki na zmianę</option><option value="id">tylko Idiomy B1–C2</option><option value="pv">tylko Phrasal verbs</option></select></label>
+<label class="f">Phrasal verbs od rozdziału <select id="u_od"></select></label>
+<label class="f">Tryb odpowiedzi <select id="u_tryb"><option value="pisz">piszę zdanie</option><option value="mow">mówię na głos, potem odsłaniam</option></select></label>
+<label class="f">Czytaj odpowiedź na głos po odsłonięciu <input type="checkbox" id="u_tts"></label>
+<p class="small">Skróty: Enter sprawdza, 1–4 oceniają, spacja odtwarza wymowę (gdy pole tekstu nie jest aktywne).</p>
+</details>
+
+<details><summary>Postęp</summary>
+<div id="postep" class="small"></div>
+<div class="hist" id="hist"></div>
+<p class="small" id="sync">Zapis tylko w tej przeglądarce. Synchronizacja: otwórz raz adres z #sync=&lt;klucz&gt;.</p>
+</details>
+</div>
+<script>
+// Dane: zdania z podręczników „Angielski w tłumaczeniach” (Preston Publishing), kopia prywatna właściciela.
+// Pliki z danymi są zakodowane (base64 + XOR), żeby treść książek nie leżała w repo otwartym tekstem.
+const API='https://nieciecz.taile0bd49.ts.net:8443/sync/';
+const SERWIS='angielski',LS='nauka_ang_stan';
+let KLUCZ=null;try{const m=location.hash.match(/sync=([\w-]+)/);if(m){localStorage.setItem('nauka_sync_klucz',m[1]);history.replaceState(null,'',location.pathname)}KLUCZ=localStorage.getItem('nauka_sync_klucz')}catch(e){}
+const $=s=>document.querySelector(s);
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const dz=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
+const DZIS=dz(new Date());
+const dodajDni=(d,n)=>dz(new Date(d+'T12:00:00').getTime()+n*864e5);
+const INT=[0,1,3,7,14,30,60,120,240,365];
+
+// ---------- stan ----------
+// {c:{id:{b,d,t,n}}, dni:{data:{ms,ile,t}}, u:{...,t}}
+let S={c:{},dni:{},u:{}};
+try{S=Object.assign(S,JSON.parse(ls.get(LS)||'{}'))}catch(e){}
+const UST0={nowe:20,min:20,zr:'mix',od:1,tryb:'pisz',tts:true};
+const U=()=>Object.assign({},UST0,S.u);
+function scal(a,b){
+ const r=JSON.parse(JSON.stringify(a||{}));r.c=r.c||{};r.dni=r.dni||{};r.u=r.u||{};
+ b=b||{};
+ for(const k in b.c||{}){const x=b.c[k];if(!r.c[k]||x.t>r.c[k].t)r.c[k]=x}
+ for(const k in b.dni||{}){const x=b.dni[k];if(!r.dni[k]||x.t>r.dni[k].t)r.dni[k]=x}
+ if(b.u&&(!r.u.t||b.u.t>r.u.t))r.u=b.u;
+ return r;
+}
+const zapiszLok=()=>ls.set(LS,JSON.stringify(S));
+
+// ---------- dane ----------
+let ZD=[],PO={},TYT={};
+function dekoduj(b64){const k='nauka';const bin=atob(b64.trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i)^k.charCodeAt(i%k.length);return JSON.parse(new TextDecoder().decode(u))}
+async function wczytaj(){
+ const pliki=[['pv','dane_pv.txt'],['id','dane_id.txt']];
+ for(const [z,f] of pliki){
+  try{const r=await fetch(f,{cache:'no-cache'});if(!r.ok)continue;const d=dekoduj(await r.text());
+   TYT[z]=d.t;for(const s of d.s){s.z=z;ZD.push(s);PO[s.id]=s}}catch(e){}
+ }
+}
+
+// ---------- kolejka dnia ----------
+let Q=[],biez=null,ileNowych=0,ileZrob=0,poprawek={};
+function nowePula(z){
+ const u=U();
+ return ZD.filter(s=>s.z===z&&!S.c[s.id]&&(z!=='pv'||s.u>=u.od));
+}
+function zbudujKolejke(dodatkoweNowe){
+ const u=U();
+ const dzis=S.dni[DZIS]||{};
+ const due=ZD.filter(s=>S.c[s.id]&&S.c[s.id].d<=DZIS).sort((a,b)=>S.c[a.id].d<S.c[b.id].d?-1:1);
+ let limit=dodatkoweNowe!=null?dodatkoweNowe:Math.max(0,u.nowe-(dzis.nowe||0));
+ const pv=nowePula('pv'),id=nowePula('id');let nowe=[];
+ if(u.zr==='pv')nowe=pv.slice(0,limit);
+ else if(u.zr==='id'||!pv.length)nowe=id.slice(0,limit);
+ else{let i=0,j=0;while(nowe.length<limit&&(i<pv.length||j<id.length)){if(j<id.length)nowe.push(id[j++]);if(nowe.length<limit&&i<pv.length)nowe.push(pv[i++])}}
+ if(!id.length&&u.zr!=='pv')nowe=nowe.length?nowe:pv.slice(0,limit);
+ // przeplot: powtórki i nowe na zmianę (najpierw 3 powtórki)
+ Q=[];let a=due.slice(0,120),b=nowe;
+ while(a.length||b.length){for(let k=0;k<3&&a.length;k++)Q.push(a.shift());if(b.length)Q.push(b.shift())}
+ ileNowych=nowe.length;
+}
+
+// ---------- porównanie odpowiedzi ----------
+const SKR=[[/\bcan['’]t\b/g,'can not'],[/\bcannot\b/g,'can not'],[/\bwon['’]t\b/g,'will not'],[/\bshan['’]t\b/g,'shall not'],[/n['’]t\b/g,' not'],[/['’]m\b/g,' am'],[/['’]re\b/g,' are'],[/['’]ve\b/g,' have'],[/['’]ll\b/g,' will'],[/['’]d\b/g," 'd"],[/['’]s\b/g," 's"]];
+function norm(t){t=t.toLowerCase().replace(/[‘’`]/g,"'");for(const [r,z] of SKR)t=t.replace(r,z);return t}
+function tokeny(t){return norm(t).replace(/\([^)]*\)/g,' ').split(/[^a-z0-9'\/-]+/).filter(Boolean)}
+const ALT={"'s":['is','has'],"'d":['would','had']};
+function pasuje(e,y){if(e===y)return true;if(ALT[e]&&ALT[e].includes(y))return true;if(ALT[y]&&ALT[y].includes(e))return true;if(e.includes('/'))return e.split('/').includes(y);if(e.replace(/-/g,'')===y.replace(/-/g,''))return true;return false}
+function lcs(E,Y){const n=E.length,m=Y.length,D=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+ for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)D[i][j]=pasuje(E[i],Y[j])?D[i+1][j+1]+1:Math.max(D[i+1][j],D[i][j+1]);
+ const ok=new Set(),okY=new Set();let i=0,j=0;while(i<n&&j<m){if(pasuje(E[i],Y[j])){ok.add(i);okY.add(j);i++;j++}else if(D[i+1][j]>=D[i][j+1])i++;else j++}
+ return {ok,okY,n:D[0][0]}}
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function porownaj(en,odp){
+ // podświetlenie brakujących słów w oryginalnym zapisie zdania
+ const czesci=en.split(/(\s+)/);const E=[],mapa=[];
+ czesci.forEach((c,i)=>{if(/\S/.test(c)){const t=tokeny(c.replace(/[()]/g,''));t.forEach(x=>{E.push(x);mapa.push(i)})}});
+ const Y=tokeny(odp);const r=lcs(E,Y);
+ const brak=new Set();E.forEach((x,i)=>{if(!r.ok.has(i))brak.add(mapa[i])});
+ const opc=new Set();czesci.forEach((c,i)=>{if(/^\(|\)$/.test(c.trim()))opc.add(i)});
+ const html=czesci.map((c,i)=>brak.has(i)&&!opc.has(i)?'<span class="miss">'+esc(c)+'</span>':esc(c)).join('');
+ const Ys=odp.split(/(\s+)/);let k=0;const yh=Ys.map(c=>{if(!/\S/.test(c))return esc(c);const t=tokeny(c);if(!t.length)return esc(c);let dobre=true;t.forEach(()=>{if(!r.okY.has(k))dobre=false;k++});return dobre?esc(c):'<span class="bad">'+esc(c)+'</span>'}).join('');
+ const wym=E.filter((x,i)=>!opc.has(mapa[i])).length||1;
+ const p=Math.min(1,r.n/Math.max(wym,Y.length));
+ return {html,yh,p};
+}
+
+// ---------- czas ----------
+let ostatniRuch=Date.now(),tik=Date.now();
+['keydown','pointerdown','input'].forEach(e=>document.addEventListener(e,()=>ostatniRuch=Date.now(),true));
+function dzien(){return S.dni[DZIS]=S.dni[DZIS]||{ms:0,ile:0,nowe:0,t:0}}
+setInterval(()=>{const t=Date.now();if(!document.hidden&&t-ostatniRuch<120000&&biez){const d=dzien();d.ms+=t-tik;d.t=t}tik=t;pokazCzas()},1000);
+function pokazCzas(){const d=S.dni[DZIS]||{ms:0},u=U(),cel=u.min*60000;const s=Math.floor(d.ms/1000);
+ $('#czas').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+' / '+u.min+':00';
+ $('#pas').style.width=Math.min(100,100*d.ms/cel)+'%';
+ if(d.ms>=cel&&!d.zal){d.zal=1;d.t=Date.now();zaliczDzis()}
+}
+
+// ---------- ekran ----------
+function licznik(){const zost=Q.length+(biez?1:0);$('#licz').textContent='zrobione dziś: '+((S.dni[DZIS]||{}).ile||0)+' · w kolejce: '+zost}
+function zrodlo(s){return s.z==='pv'?'Phrasal verbs · '+s.u+'. '+(TYT.pv[s.u]||''):'Idiomy · '+s.u+'. '+((TYT.id||{})[s.u]||'')}
+function nastepne(){
+ biez=Q.shift()||null;licznik();
+ if(!biez){koniec();return}
+ const u=U(),st=S.c[biez.id];
+ $('#glowna').innerHTML='<div class="src"><span>'+esc(zrodlo(biez))+'</span><span>'+(st?'powtórka':'nowe')+'</span></div>'+
+  '<p class="pl">'+esc(biez.pl)+'</p>'+
+  (u.tryb==='pisz'?'<textarea id="odp" placeholder="Twoje tłumaczenie po angielsku" autocapitalize="sentences" spellcheck="false"></textarea>':'<p class="small">Powiedz zdanie na głos po angielsku, potem odsłoń.</p>')+
+  '<div class="row">'+(u.tryb==='pisz'?'<button class="pri" id="spr">Sprawdź</button>'+(SR?'<button id="mik">🎤 Powiedz</button>':''):'<button class="pri" id="spr">Odsłoń</button>')+'</div><div id="wyn"></div>';
+ $('#spr').onclick=sprawdz;
+ if($('#mik'))$('#mik').onclick=mikrofon;
+ const t=$('#odp');if(t){t.focus();t.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sprawdz()}})}
+}
+let sugestia=3;
+function sprawdz(){
+ if(!biez||$('#wyn').dataset.ok)return;$('#wyn').dataset.ok=1;
+ const t=$('#odp'),odp=t?t.value.trim():'';if(t)t.readOnly=true;$('#spr').disabled=true;if($('#mik'))$('#mik').disabled=true;
+ let h='';
+ if(t&&odp){const r=porownaj(biez.en,odp);h+='<div class="en">'+r.html+'</div><div class="you">'+r.yh+'</div>';
+  const p=Math.round(r.p*100);sugestia=p>=95?3:p>=75?2:1;h+='<div class="score" style="color:var(--'+(p>=95?'ok':p>=75?'warn':'bad')+')">Zgodność z wersją z książki: '+p+'%</div>'}
+ else{h+='<div class="en">'+esc(biez.en)+'</div>';sugestia=3}
+ const st=S.c[biez.id],b=st?st.b:0;
+ const nz=g=>{const nb=nowyStan(b,g,!st).b;return g===1?'dziś':INT[nb]===1?'jutro':INT[nb]+' dni'};
+ h+='<div class="row"><button id="tts">🔊 Wymowa</button></div>';
+ h+='<div class="g">'+[[1,'Nie umiałem'],[2,'Trudne'],[3,'Dobrze'],[4,'Łatwe']].map(([g,n])=>'<button data-g="'+g+'"'+(g===sugestia?' class="s"':'')+'>'+n+'<small>'+g+' · '+nz(g)+'</small></button>').join('')+'</div>';
+ $('#wyn').innerHTML=h;
+ $('#tts').onclick=()=>mow(biez.en);
+ $('#wyn').querySelectorAll('[data-g]').forEach(x=>x.onclick=()=>ocen(+x.dataset.g));
+ if(U().tts)mow(biez.en);
+}
+function nowyStan(b,g,nowe){
+ if(g===1)return {b:0,dni:0};
+ if(g===2)return {b:Math.max(1,nowe?1:b),dni:Math.max(1,Math.round(INT[Math.max(1,b)]/2))};
+ const nb=Math.min(INT.length-1,(nowe&&g===4)?5:b+(g===4?2:1));return {b:nb,dni:INT[nb]};
+}
+function ocen(g){
+ if(!biez)return;const st=S.c[biez.id],nowe=!st,r=nowyStan(st?st.b:0,g,nowe);
+ const d=dzien();d.ile++;if(nowe)d.nowe=(d.nowe||0)+1;d.t=Date.now();
+ S.c[biez.id]={b:r.b,d:dodajDni(DZIS,r.dni),t:Date.now(),n:(st?st.n:0)+1};
+ if(g===1){poprawek[biez.id]=(poprawek[biez.id]||0)+1;if(poprawek[biez.id]<=3)Q.splice(Math.min(Q.length,5),0,biez)}
+ zapiszLok();wyslij();nastepne();
+}
+function koniec(){
+ const d=S.dni[DZIS]||{ms:0},u=U(),min=Math.round(d.ms/60000);
+ if(!d.zal&&(d.ile||0)>0){dzien().zal=1;dzien().t=Date.now();zaliczDzis();zapiszLok();wyslij()}
+ $('#glowna').innerHTML='<div class="done"><h2>Na dziś gotowe</h2><p class="small">'+(d.ile||0)+' zdań, '+min+' min. Jutro czekają powtórki i nowe zdania.</p>'+
+  '<div class="row" style="justify-content:center"><button class="pri" id="wiecej">Jeszcze 10 nowych</button></div></div>';
+ $('#wiecej').onclick=()=>{zbudujKolejke(10);nastepne()};
+ rysujPostep();
+}
+
+// ---------- mowa ----------
+let glos=null;function wybierzGlos(){const v=speechSynthesis.getVoices();glos=v.find(x=>/en-GB/i.test(x.lang)&&/Google|Natural|Daniel|Serena/i.test(x.name))||v.find(x=>/en-GB/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}
+if('speechSynthesis' in window){wybierzGlos();speechSynthesis.onvoiceschanged=wybierzGlos}
+function mow(t){if(!('speechSynthesis' in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\//g,' or ').replace(/[()]/g,''));u.lang='en-GB';if(glos)u.voice=glos;u.rate=.95;speechSynthesis.speak(u)}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function mikrofon(){const r=new SR();r.lang='en-GB';r.interimResults=true;const t=$('#odp'),pocz=t.value?t.value+' ':'';$('#mik').textContent='🎤 słucham…';
+ r.onresult=e=>{let s='';for(const x of e.results)s+=x[0].transcript;t.value=pocz+s};r.onend=()=>{if($('#mik'))$('#mik').textContent='🎤 Powiedz'};r.start()}
+
+document.addEventListener('keydown',e=>{
+ if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+ if($('#wyn')&&$('#wyn').dataset.ok){if(/^[1-4]$/.test(e.key))ocen(+e.key);else if(e.key===' '){e.preventDefault();mow(biez.en)}else if(e.key==='Enter')ocen(sugestia)}
+ else if(e.key==='Enter'&&$('#spr')){e.preventDefault();sprawdz()}
+});
+
+// ---------- lista dnia (/nauka/dzis/) ----------
+async function zaliczDzis(){
+ const k='angielski';let L={};try{L=JSON.parse(ls.get('jez_stan')||'{}')}catch(e){}
+ L[DZIS]=L[DZIS]||{};L[DZIS][k]={v:true,t:Date.now()};ls.set('jez_stan',JSON.stringify(L));
+ if(!KLUCZ)return;
+ try{const url=API+KLUCZ+'/dzis';const r=await fetch(url,{cache:'no-store'});const j=r.ok?await r.json():{};const v=(j&&j.v)||{};
+  if(v[DZIS]&&v[DZIS][k]&&v[DZIS][k].v)return;v[DZIS]=v[DZIS]||{};v[DZIS][k]={v:true,t:Date.now()};
+  await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({v})})}catch(e){}
+}
+
+// ---------- postęp ----------
+function rysujPostep(){
+ const z={pv:[0,0,0],id:[0,0,0]};
+ for(const s of ZD){const c=S.c[s.id];const a=z[s.z];if(!c)a[0]++;else if(c.b>=4)a[2]++;else a[1]++}
+ const w=(n,a)=>a[0]+a[1]+a[2]?'<tr><td>'+n+'</td><td class="n">'+a[1]+' w nauce</td><td class="n">'+a[2]+' utrwalone</td><td class="n">'+a[0]+' przed tobą</td></tr>':'';
+ const jutro=ZD.filter(s=>S.c[s.id]&&S.c[s.id].d===dodajDni(DZIS,1)).length;
+ $('#postep').innerHTML='<table>'+w('Idiomy B1–C2',z.id)+w('Phrasal verbs',z.pv)+'</table><p>Jutro powtórek: '+jutro+'. „Utrwalone” to zdania z odstępem co najmniej 2 tygodni.</p>';
+ let hs='';for(let i=13;i>=0;i--){const d=dodajDni(DZIS,-i),x=S.dni[d]||{};const m=Math.round((x.ms||0)/60000);
+  hs+='<div title="'+d+': '+m+' min, '+(x.ile||0)+' zdań" style="background:'+(m?'color-mix(in srgb,var(--ok) '+Math.min(100,25+m*4)+'%,var(--line))':'var(--line)')+'"></div>'}
+ $('#hist').innerHTML=hs;
+}
+
+// ---------- ustawienia ----------
+function ustawienia(){
+ const u=U();$('#u_nowe').value=u.nowe;$('#u_min').value=u.min;$('#u_zr').value=u.zr;$('#u_tryb').value=u.tryb;$('#u_tts').checked=!!u.tts;
+ const tp=TYT.pv||{};$('#u_od').innerHTML=Object.keys(tp).map(k=>'<option value="'+k+'">'+k+'. '+esc(tp[k])+'</option>').join('');$('#u_od').value=u.od;
+ const zm=()=>{S.u={nowe:+$('#u_nowe').value||0,min:+$('#u_min').value||20,zr:$('#u_zr').value,od:+$('#u_od').value||1,tryb:$('#u_tryb').value,tts:$('#u_tts').checked,t:Date.now()};zapiszLok();wyslij();pokazCzas()};
+ ['#u_nowe','#u_min','#u_zr','#u_od','#u_tryb','#u_tts'].forEach(s=>$(s).onchange=()=>{zm();if(!$('#wyn')||!$('#wyn').dataset.ok){if(biez)Q.unshift(biez);zbudujKolejke();nastepne()}});
+}
+
+// ---------- synchronizacja ----------
+const info=t=>$('#sync').textContent=t;
+async function pobierz(){const r=await fetch(API+KLUCZ+'/'+SERWIS,{cache:'no-store'});if(!r.ok)throw 0;return (await r.json()).v||{}}
+let trwa=false,znowu=false;
+async function wyslij(){if(!KLUCZ)return;if(trwa){znowu=true;return}trwa=true;
+ try{S=scal(S,await pobierz());const r=await fetch(API+KLUCZ+'/'+SERWIS,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:S})});if(!r.ok)throw 0;zapiszLok();info('Zsynchronizowano '+new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}))}
+ catch(e){info('Offline, zapisano w tej przeglądarce')}trwa=false;if(znowu){znowu=false;wyslij()}}
+async function synchro(){if(!KLUCZ)return;try{const zd=await pobierz();S=scal(S,zd);zapiszLok();if(JSON.stringify(scal(zd,S))!==JSON.stringify(zd))await wyslij();else info('Zsynchronizowano '+new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}))}catch(e){info('Offline, zapisano w tej przeglądarce')}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(dz(new Date())!==DZIS)location.reload();else synchro()}});
+
+(async()=>{
+ await wczytaj();
+ if(!ZD.length){$('#glowna').textContent='Nie udało się wczytać zdań.';return}
+ await Promise.race([synchro(),new Promise(r=>setTimeout(r,2500))]);
+ ustawienia();zbudujKolejke();nastepne();rysujPostep();pokazCzas();
+})();
+</script></body></html>
