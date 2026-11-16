@@ -38,10 +38,15 @@ select,input[type=number]{font:inherit;font-size:.95rem;padding:5px 8px;border-r
 table{width:100%;border-collapse:collapse;font-size:.85rem}td{padding:3px 4px;border-bottom:1px solid var(--line)}td.n{text-align:right;white-space:nowrap;color:var(--muted)}
 .hist{display:flex;gap:4px;margin-top:8px}.hist div{flex:1;height:26px;border-radius:5px;background:var(--line)}
 .kbd{font-size:.75rem;color:var(--muted)}
+.enl{font-size:1.08rem;line-height:2.1;margin:0 0 4px}
+.luka{font:inherit;font-size:1rem;padding:2px 6px;border:none;border-bottom:2px solid var(--accent);background:var(--soft);color:var(--ink);border-radius:6px 6px 0 0;max-width:100%}
+.luka.tak{border-color:var(--ok);color:var(--ok);font-weight:600}.luka.nie{border-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.pop{color:var(--ok);font-weight:600;margin-left:4px}
+.haslo{margin:12px 0 0;padding:10px 12px;border-left:3px solid var(--accent);background:var(--soft);border-radius:0 10px 10px 0;font-size:.95rem}
 @media (max-width:420px){.g{grid-template-columns:repeat(2,1fr)}}
 </style></head><body><div class="w">
 <div class="top"><h1>Angielski w tłumaczeniach</h1><a href="../">← Nauka</a></div>
-<p class="sub">Codzienna sesja: tłumacz zdania z polskiego, sprawdzaj, oceniaj. Powtórki wracają, gdy zaczynasz zapominać.</p>
+<p class="sub">Codzienna sesja: uzupełniaj idiomy i phrasal verbs w zdaniach, oceniaj. Powtórki wracają, gdy zaczynasz zapominać.</p>
 <div class="bar"><i id="pas"></i></div>
 <div class="stat"><span id="czas">0:00 / 20:00</span><span id="licz"></span></div>
 <div id="glowna" class="card">Wczytywanie zdań…</div>
@@ -51,7 +56,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td{padding:3px 4px;bo
 <label class="f">Minut dziennie <input type="number" id="u_min" min="5" max="90" step="5"></label>
 <label class="f">Źródło nowych zdań <select id="u_zr"><option value="mix">oba podręczniki na zmianę</option><option value="id">tylko Idiomy B1–C2</option><option value="pv">tylko Phrasal verbs</option></select></label>
 <label class="f">Phrasal verbs od rozdziału <select id="u_od"></select></label>
-<label class="f">Tryb odpowiedzi <select id="u_tryb"><option value="pisz">piszę zdanie</option><option value="mow">mówię na głos, potem odsłaniam</option></select></label>
+<label class="f">Tryb odpowiedzi <select id="u_tryb"><option value="luki">uzupełniam idiom w zdaniu</option><option value="mow">tłumaczę na głos, potem odsłaniam</option><option value="pisz">piszę całe zdanie</option></select></label>
 <label class="f">Czytaj odpowiedź na głos po odsłonięciu <input type="checkbox" id="u_tts"></label>
 <p class="small">Skróty: Enter sprawdza, 1–4 oceniają, spacja odtwarza wymowę (gdy pole tekstu nie jest aktywne).</p>
 </details>
@@ -78,7 +83,7 @@ const INT=[0,1,3,7,14,30,60,120,240,365];
 // {c:{id:{b,d,t,n}}, dni:{data:{ms,ile,t}}, u:{...,t}}
 let S={c:{},dni:{},u:{}};
 try{S=Object.assign(S,JSON.parse(ls.get(LS)||'{}'))}catch(e){}
-const UST0={nowe:20,min:20,zr:'mix',od:1,tryb:'pisz',tts:true};
+const UST0={nowe:20,min:20,zr:'mix',od:1,tryb:'luki',tts:true};
 const U=()=>Object.assign({},UST0,S.u);
 function scal(a,b){
  const r=JSON.parse(JSON.stringify(a||{}));r.c=r.c||{};r.dni=r.dni||{};r.u=r.u||{};
@@ -99,7 +104,7 @@ async function wczytaj(){
  for(const z of ['pv','id']){
   const LK='nauka_ang_dane_'+z;let b64=ls.get(LK);
   const swiezy=KLUCZ?fetch(API+KLUCZ+'/ang_dane_'+z,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{const d=j&&j.v&&j.v.d;if(d&&d!==ls.get(LK))ls.set(LK,d);return d}).catch(()=>null):Promise.resolve(null);
-  if(!b64)b64=await swiezy;
+  const nowy=await Promise.race([swiezy,new Promise(r=>setTimeout(()=>r(null),b64?3000:20000))]);if(nowy)b64=nowy;
   if(!b64)continue;
   try{const d=dekoduj(b64);TYT[z]=d.t;for(const s of d.s){s.z=z;ZD.push(s);PO[s.id]=s}}catch(e){}
  }
@@ -166,26 +171,54 @@ function pokazCzas(){const d=S.dni[DZIS]||{ms:0},u=U(),cel=u.min*60000;const s=M
 // ---------- ekran ----------
 function licznik(){const zost=Q.length+(biez?1:0);$('#licz').textContent='zrobione dziś: '+((S.dni[DZIS]||{}).ile||0)+' · w kolejce: '+zost}
 function zrodlo(s){return s.z==='pv'?'Phrasal verbs · '+s.u+'. '+(TYT.pv[s.u]||''):'Idiomy · '+s.u+'. '+((TYT.id||{})[s.u]||'')}
+// Tryb „luki”: angielskie zdanie z pustym miejscem na idiom / phrasal verb (g = indeksy słów, k = hasło ze słowniczka).
+function biegi(s){const g=s.g||[];const r=[];for(const i of g){if(r.length&&r[r.length-1][1]===i-1)r[r.length-1][1]=i;else r.push([i,i])}return r}
+const rdz=w=>w.replace(/^([^A-Za-z0-9’']*)(.*?)([^A-Za-z0-9’']*)$/,(m,a,b,c)=>a+'\u0000'+b+'\u0000'+c).split('\u0000');
+const rowne=(a,b)=>norm(a).replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim()===norm(b).replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim();
+function trybKarty(){const t=U().tryb;return t==='luki'&&!(biez.g&&biez.g.length)?'mow':t}
 function nastepne(){
  biez=Q.shift()||null;licznik();
  if(!biez){koniec();return}
- const u=U(),st=S.c[biez.id];
- $('#glowna').innerHTML='<div class="src"><span>'+esc(zrodlo(biez))+'</span><span>'+(st?'powtórka':'nowe')+'</span></div>'+
-  '<p class="pl">'+esc(biez.pl)+'</p>'+
-  (u.tryb==='pisz'?'<textarea id="odp" placeholder="Twoje tłumaczenie po angielsku" autocapitalize="sentences" spellcheck="false"></textarea>':'<p class="small">Powiedz zdanie na głos po angielsku, potem odsłoń.</p>')+
-  '<div class="row">'+(u.tryb==='pisz'?'<button class="pri" id="spr">Sprawdź</button>'+(SR?'<button id="mik">🎤 Powiedz</button>':''):'<button class="pri" id="spr">Odsłoń</button>')+'</div><div id="wyn"></div>';
+ const st=S.c[biez.id],tr=trybKarty();
+ let h='<div class="src"><span>'+esc(zrodlo(biez))+'</span><span>'+(st?'powtórka':'nowe')+'</span></div><p class="pl">'+esc(biez.pl)+'</p>';
+ if(tr==='luki'){
+  const T=biez.en.split(' '),R=biegi(biez);let i=0,out=[];
+  R.forEach((r,ri)=>{while(i<r[0])out.push(esc(T[i++]));
+   const sl=T.slice(r[0],r[1]+1);const p0=rdz(sl[0]),pN=rdz(sl[sl.length-1]);
+   const naj=(sl.length===1?rdz(sl[0])[1]:[rdz(sl[0])[1]].concat(sl.slice(1,-1),[rdz(sl[sl.length-1])[1]]).join(' '));
+   const lit=naj.split(' ').map(w=>w[0]+'…').join(' ');
+   out.push(esc(p0[0])+'<input class="luka" data-r="'+ri+'" data-ok="'+esc(naj)+'" data-lit="'+esc(lit)+'" placeholder="'+esc(naj[0])+'…" size="'+Math.max(4,naj.length+1)+'" autocapitalize="off" autocomplete="off" spellcheck="false">'+esc(pN[2]));
+   i=r[1]+1});
+  while(i<T.length)out.push(esc(T[i++]));
+  h+='<p class="enl">'+out.join(' ')+'</p><div class="row"><button class="pri" id="spr">Sprawdź</button><button id="podp">Podpowiedź</button></div>';
+ }else if(tr==='pisz'){
+  h+='<textarea id="odp" placeholder="Twoje tłumaczenie po angielsku" autocapitalize="sentences" spellcheck="false"></textarea><div class="row"><button class="pri" id="spr">Sprawdź</button>'+(SR?'<button id="mik">🎤 Powiedz</button>':'')+'</div>';
+ }else{
+  h+='<p class="small">Przetłumacz zdanie na głos albo w myślach, potem odsłoń.</p><div class="row"><button class="pri" id="spr">Odsłoń</button></div>';
+ }
+ $('#glowna').innerHTML=h+'<div id="wyn"></div>';
  $('#spr').onclick=sprawdz;
  if($('#mik'))$('#mik').onclick=mikrofon;
+ if($('#podp'))$('#podp').onclick=()=>document.querySelectorAll('.luka').forEach(x=>{x.placeholder=x.dataset.lit});
+ const L=[...document.querySelectorAll('.luka')];
+ L.forEach((x,j)=>x.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(j<L.length-1&&!L[j+1].value)L[j+1].focus();else sprawdz()}}));
+ if(L.length)L[0].focus();
  const t=$('#odp');if(t){t.focus();t.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sprawdz()}})}
 }
 let sugestia=3;
 function sprawdz(){
  if(!biez||$('#wyn').dataset.ok)return;$('#wyn').dataset.ok=1;
- const t=$('#odp'),odp=t?t.value.trim():'';if(t)t.readOnly=true;$('#spr').disabled=true;if($('#mik'))$('#mik').disabled=true;
- let h='';
- if(t&&odp){const r=porownaj(biez.en,odp);h+='<div class="en">'+r.html+'</div><div class="you">'+r.yh+'</div>';
+ $('#spr').disabled=true;if($('#mik'))$('#mik').disabled=true;if($('#podp'))$('#podp').disabled=true;
+ const t=$('#odp'),odp=t?t.value.trim():'';if(t)t.readOnly=true;
+ let h='';const L=[...document.querySelectorAll('.luka')];
+ if(L.length){let dobre=0;
+  L.forEach(x=>{x.readOnly=true;const ok=rowne(x.value,x.dataset.ok);if(ok)dobre++;x.classList.add(ok?'tak':'nie');
+   if(!ok){const s=document.createElement('span');s.className='pop';s.textContent=x.dataset.ok;x.after(s)}});
+  sugestia=dobre===L.length?3:dobre>0||L.some(x=>x.value.trim())?2:1;
+  if(biez.k)h+='<div class="haslo">'+biez.k.map(k=>'<b>'+esc(k[0])+'</b>'+(k[1]?' · '+esc(k[1]):'')).join('<br>')+'</div>';
+ }else if(t&&odp){const r=porownaj(biez.en,odp);h+='<div class="en">'+r.html+'</div><div class="you">'+r.yh+'</div>';
   const p=Math.round(r.p*100);sugestia=p>=95?3:p>=75?2:1;h+='<div class="score" style="color:var(--'+(p>=95?'ok':p>=75?'warn':'bad')+')">Zgodność z wersją z książki: '+p+'%</div>'}
- else{h+='<div class="en">'+esc(biez.en)+'</div>';sugestia=3}
+ else{h+='<div class="en">'+esc(biez.en)+'</div>';sugestia=3;if(biez.k)h+='<div class="haslo">'+biez.k.map(k=>'<b>'+esc(k[0])+'</b>'+(k[1]?' · '+esc(k[1]):'')).join('<br>')+'</div>'}
  const st=S.c[biez.id],b=st?st.b:0;
  const nz=g=>{const nb=nowyStan(b,g,!st).b;return g===1?'dziś':INT[nb]===1?'jutro':INT[nb]+' dni'};
  h+='<div class="row"><button id="tts">🔊 Wymowa</button></div>';
@@ -193,6 +226,7 @@ function sprawdz(){
  $('#wyn').innerHTML=h;
  $('#tts').onclick=()=>mow(biez.en);
  $('#wyn').querySelectorAll('[data-g]').forEach(x=>x.onclick=()=>ocen(+x.dataset.g));
+ if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
  if(U().tts)mow(biez.en);
 }
 function nowyStan(b,g,nowe){
