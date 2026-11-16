@@ -48,7 +48,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td{padding:3px 4px;bo
 <div class="top"><h1>Angielski w tłumaczeniach</h1><a href="../">← Nauka</a></div>
 <p class="sub">Codzienna sesja: uzupełniaj idiomy i phrasal verbs w zdaniach, oceniaj. Powtórki wracają, gdy zaczynasz zapominać.</p>
 <div class="bar"><i id="pas"></i></div>
-<div class="stat"><span id="czas">0:00 / 20:00</span><span id="licz"></span></div>
+<div class="stat"><span id="czas">0:00 / 10:00</span><span id="licz"></span></div>
 <div id="glowna" class="card">Wczytywanie zdań…</div>
 
 <details id="ust"><summary>Ustawienia</summary>
@@ -83,7 +83,7 @@ const INT=[0,1,3,7,14,30,60,120,240,365];
 // {c:{id:{b,d,t,n}}, dni:{data:{ms,ile,t}}, u:{...,t}}
 let S={c:{},dni:{},u:{}};
 try{S=Object.assign(S,JSON.parse(ls.get(LS)||'{}'))}catch(e){}
-const UST0={nowe:20,min:20,zr:'mix',od:1,tryb:'luki',tts:true};
+const UST0={nowe:20,min:10,zr:'mix',od:1,tryb:'luki',tts:true};
 const U=()=>Object.assign({},UST0,S.u);
 function scal(a,b){
  const r=JSON.parse(JSON.stringify(a||{}));r.c=r.c||{};r.dni=r.dni||{};r.u=r.u||{};
@@ -290,7 +290,7 @@ function rysujPostep(){
 function ustawienia(){
  const u=U();$('#u_nowe').value=u.nowe;$('#u_min').value=u.min;$('#u_zr').value=u.zr;$('#u_tryb').value=u.tryb;$('#u_tts').checked=!!u.tts;
  const tp=TYT.pv||{};$('#u_od').innerHTML=Object.keys(tp).map(k=>'<option value="'+k+'">'+k+'. '+esc(tp[k])+'</option>').join('');$('#u_od').value=u.od;
- const zm=()=>{S.u={nowe:+$('#u_nowe').value||0,min:+$('#u_min').value||20,zr:$('#u_zr').value,od:+$('#u_od').value||1,tryb:$('#u_tryb').value,tts:$('#u_tts').checked,t:Date.now()};zapiszLok();wyslij();pokazCzas()};
+ const zm=()=>{S.u={nowe:+$('#u_nowe').value||0,min:+$('#u_min').value||10,zr:$('#u_zr').value,od:+$('#u_od').value||1,tryb:$('#u_tryb').value,tts:$('#u_tts').checked,t:Date.now()};zapiszLok();wyslij();pokazCzas()};
  ['#u_nowe','#u_min','#u_zr','#u_od','#u_tryb','#u_tts'].forEach(s=>$(s).onchange=()=>{zm();if(!$('#wyn')||!$('#wyn').dataset.ok){if(biez)Q.unshift(biez);zbudujKolejke();nastepne()}});
 }
 
