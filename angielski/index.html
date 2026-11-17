@@ -33,6 +33,7 @@ button:disabled{opacity:.5}
 details{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
 summary{cursor:pointer;font-weight:600}
 label.f{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0;font-size:.95rem}
+select{max-width:62%}
 select,input[type=number]{font:inherit;font-size:.95rem;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .small{font-size:.82rem;color:var(--muted)}
 table{width:100%;border-collapse:collapse;font-size:.85rem}td{padding:3px 4px;border-bottom:1px solid var(--line)}td.n{text-align:right;white-space:nowrap;color:var(--muted)}
@@ -43,10 +44,14 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td{padding:3px 4px;bo
 .luka.tak{border-color:var(--ok);color:var(--ok);font-weight:600}.luka.nie{border-color:var(--bad);color:var(--bad);text-decoration:line-through}
 .pop{color:var(--ok);font-weight:600;margin-left:4px}
 .haslo{margin:12px 0 0;padding:10px 12px;border-left:3px solid var(--accent);background:var(--soft);border-radius:0 10px 10px 0;font-size:.95rem}
+.zrl label{display:flex;gap:8px;align-items:center;margin:6px 0 0 4px;font-size:.92rem}
+.opcje{display:grid;gap:8px;margin-top:6px}.opcje button{text-align:left}.opcje .tak{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--soft))}.opcje .nie{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,var(--soft))}
+.tw{width:100%;font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.tw.tak{border-color:var(--ok);color:var(--ok);font-weight:600}.tw.nie{border-color:var(--bad);color:var(--bad)}
 @media (max-width:420px){.g{grid-template-columns:repeat(2,1fr)}}
 </style></head><body><div class="w">
 <div class="top"><h1>Angielski w tłumaczeniach</h1><a href="../">← Nauka</a></div>
-<p class="sub">Codzienna sesja: uzupełniaj idiomy i phrasal verbs w zdaniach, oceniaj. Powtórki wracają, gdy zaczynasz zapominać.</p>
+<p class="sub">Codzienna sesja C1–C2: idiomy, phrasal verbs i słownictwo w zdaniach, z powtórkami. Powtórki wracają, gdy zaczynasz zapominać.</p>
 <div class="bar"><i id="pas"></i></div>
 <div class="stat"><span id="czas">0:00 / 10:00</span><span id="licz"></span></div>
 <div id="glowna" class="card">Wczytywanie zdań…</div>
@@ -54,7 +59,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td{padding:3px 4px;bo
 <details id="ust"><summary>Ustawienia</summary>
 <label class="f">Nowych zdań dziennie <input type="number" id="u_nowe" min="0" max="60" step="5"></label>
 <label class="f">Minut dziennie <input type="number" id="u_min" min="5" max="90" step="5"></label>
-<label class="f">Źródło nowych zdań <select id="u_zr"><option value="mix">oba podręczniki na zmianę</option><option value="id">tylko Idiomy B1–C2</option><option value="pv">tylko Phrasal verbs</option></select></label>
+<div class="f" style="display:block">Źródła nowych zadań (na zmianę):<div id="u_zrl" class="zrl"></div></div>
 <label class="f">Phrasal verbs od rozdziału <select id="u_od"></select></label>
 <label class="f">Tryb odpowiedzi <select id="u_tryb"><option value="luki">uzupełniam idiom w zdaniu</option><option value="mow">tłumaczę na głos, potem odsłaniam</option><option value="pisz">piszę całe zdanie</option></select></label>
 <label class="f">Czytaj odpowiedź na głos po odsłonięciu <input type="checkbox" id="u_tts"></label>
@@ -83,7 +88,8 @@ const INT=[0,1,3,7,14,30,60,120,240,365];
 // {c:{id:{b,d,t,n}}, dni:{data:{ms,ile,t}}, u:{...,t}}
 let S={c:{},dni:{},u:{}};
 try{S=Object.assign(S,JSON.parse(ls.get(LS)||'{}'))}catch(e){}
-const UST0={nowe:20,min:10,zr:'mix',od:1,tryb:'luki',tts:true};
+const ZRODLA=[{z:'id',n:'Idiomy B1–C2 (w tłumaczeniach)'},{z:'pv',n:'Phrasal verbs (w tłumaczeniach)'},{z:'mo',n:'Moje słówka C1 i test'},{z:'de',n:'Destination C1 & C2'},{z:'ed',n:'Idiomy Edgard'}];
+const UST0={nowe:20,min:10,zl:null,od:1,tryb:'luki',tts:true};
 const U=()=>Object.assign({},UST0,S.u);
 function scal(a,b){
  const r=JSON.parse(JSON.stringify(a||{}));r.c=r.c||{};r.dni=r.dni||{};r.u=r.u||{};
@@ -98,12 +104,12 @@ const zapiszLok=()=>ls.set(LS,JSON.stringify(S));
 // ---------- dane ----------
 let ZD=[],PO={},TYT={};
 function dekoduj(b64){const k='nauka';const bin=atob(b64.trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i)^k.charCodeAt(i%k.length);return JSON.parse(new TextDecoder().decode(u))}
-// Treść książek leży na serwerze nieciecz (usługa nauka-sync, serwisy ang_dane_id i ang_dane_pv), dostępna tylko z kluczem.
+// Własne słówka (dane_mo.txt) są w repo. Treść książek leży na serwerze nieciecz (usługa nauka-sync, serwisy ang_dane_id i ang_dane_pv), dostępna tylko z kluczem.
 // Kopia w localStorage pozwala ćwiczyć offline i przyspiesza start.
 async function wczytaj(){
- for(const z of ['pv','id']){
+ for(const {z} of ZRODLA){
   const LK='nauka_ang_dane_'+z;let b64=ls.get(LK);
-  const swiezy=KLUCZ?fetch(API+KLUCZ+'/ang_dane_'+z,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{const d=j&&j.v&&j.v.d;if(d&&d!==ls.get(LK))ls.set(LK,d);return d}).catch(()=>null):Promise.resolve(null);
+  const swiezy=z==='mo'?fetch('dane_mo.txt',{cache:'no-cache'}).then(r=>r.ok?r.text():null).then(d=>{if(d&&d!==ls.get(LK))ls.set(LK,d);return d}).catch(()=>null):KLUCZ?fetch(API+KLUCZ+'/ang_dane_'+z,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{const d=j&&j.v&&j.v.d;if(d&&d!==ls.get(LK))ls.set(LK,d);return d}).catch(()=>null):Promise.resolve(null);
   const nowy=await Promise.race([swiezy,new Promise(r=>setTimeout(()=>r(null),b64?3000:20000))]);if(nowy)b64=nowy;
   if(!b64)continue;
   try{const d=dekoduj(b64);TYT[z]=d.t;for(const s of d.s){s.z=z;ZD.push(s);PO[s.id]=s}}catch(e){}
@@ -112,6 +118,8 @@ async function wczytaj(){
 
 // ---------- kolejka dnia ----------
 let Q=[],biez=null,ileNowych=0,ileZrob=0,poprawek={};
+function wlaczone(){const u=U();const dost=ZRODLA.map(x=>x.z).filter(z=>ZD.some(s=>s.z===z));
+ let l=u.zl;if(!l){l=u.zr==='id'?['id']:u.zr==='pv'?['pv']:dost}return dost.filter(z=>l.includes(z))}
 function nowePula(z){
  const u=U();
  return ZD.filter(s=>s.z===z&&!S.c[s.id]&&(z!=='pv'||s.u>=u.od));
@@ -121,11 +129,8 @@ function zbudujKolejke(dodatkoweNowe){
  const dzis=S.dni[DZIS]||{};
  const due=ZD.filter(s=>S.c[s.id]&&S.c[s.id].d<=DZIS).sort((a,b)=>S.c[a.id].d<S.c[b.id].d?-1:1);
  let limit=dodatkoweNowe!=null?dodatkoweNowe:Math.max(0,u.nowe-(dzis.nowe||0));
- const pv=nowePula('pv'),id=nowePula('id');let nowe=[];
- if(u.zr==='pv')nowe=pv.slice(0,limit);
- else if(u.zr==='id'||!pv.length)nowe=id.slice(0,limit);
- else{let i=0,j=0;while(nowe.length<limit&&(i<pv.length||j<id.length)){if(j<id.length)nowe.push(id[j++]);if(nowe.length<limit&&i<pv.length)nowe.push(pv[i++])}}
- if(!id.length&&u.zr!=='pv')nowe=nowe.length?nowe:pv.slice(0,limit);
+ const pule=wlaczone().map(nowePula).filter(p=>p.length);let nowe=[],i=0;
+ while(nowe.length<limit&&pule.some(p=>p.length)){const p=pule[i++%pule.length];if(p.length)nowe.push(p.shift())}
  // przeplot: powtórki i nowe na zmianę (najpierw 3 powtórki)
  Q=[];let a=due.slice(0,120),b=nowe;
  while(a.length||b.length){for(let k=0;k<3&&a.length;k++)Q.push(a.shift());if(b.length)Q.push(b.shift())}
@@ -170,18 +175,22 @@ function pokazCzas(){const d=S.dni[DZIS]||{ms:0},u=U(),cel=u.min*60000;const s=M
 
 // ---------- ekran ----------
 function licznik(){const zost=Q.length+(biez?1:0);$('#licz').textContent='zrobione dziś: '+((S.dni[DZIS]||{}).ile||0)+' · w kolejce: '+zost}
-function zrodlo(s){return s.z==='pv'?'Phrasal verbs · '+s.u+'. '+(TYT.pv[s.u]||''):'Idiomy · '+s.u+'. '+((TYT.id||{})[s.u]||'')}
+function zrodlo(s){const n={id:'Idiomy',pv:'Phrasal verbs',mo:'Moje C1',de:'Destination',ed:'Edgard'}[s.z]||s.z;const t=(TYT[s.z]||{})[s.u];return n+(s.z==='mo'?'':' · '+s.u+'.')+(t?' '+t:'')}
 // Tryb „luki”: angielskie zdanie z pustym miejscem na idiom / phrasal verb (g = indeksy słów, k = hasło ze słowniczka).
 function biegi(s){const g=s.g||[];const r=[];for(const i of g){if(r.length&&r[r.length-1][1]===i-1)r[r.length-1][1]=i;else r.push([i,i])}return r}
 const rdz=w=>w.replace(/^([^A-Za-z0-9’']*)(.*?)([^A-Za-z0-9’']*)$/,(m,a,b,c)=>a+'\u0000'+b+'\u0000'+c).split('\u0000');
 const rowne=(a,b)=>norm(a).replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim()===norm(b).replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim();
-function trybKarty(){const t=U().tryb;return t==='luki'&&!(biez.g&&biez.g.length)?'mow':t}
+function trybKarty(){if(biez.typ)return biez.typ;const t=U().tryb;return t==='luki'&&!(biez.g&&biez.g.length)?'mow':t}
 function nastepne(){
  biez=Q.shift()||null;licznik();
  if(!biez){koniec();return}
  const st=S.c[biez.id],tr=trybKarty();
- let h='<div class="src"><span>'+esc(zrodlo(biez))+'</span><span>'+(st?'powtórka':'nowe')+'</span></div><p class="pl">'+esc(biez.pl)+'</p>';
- if(tr==='luki'){
+ let h='<div class="src"><span>'+esc(zrodlo(biez))+'</span><span>'+(st?'powtórka':'nowe')+'</span></div>'+(tr==='mc'||tr==='tw'?'':'<p class="pl">'+esc(biez.pl||'')+'</p>');
+ if(tr==='mc'){
+  h+='<p class="pl">'+esc(biez.q)+(biez.au?' <button id="aud" title="Wymowa">🔊</button>':'')+'</p><div class="opcje">'+biez.o.map((o,j)=>'<button data-o="'+j+'">'+(j+1)+'. '+esc(o)+'</button>').join('')+'</div><div class="row" style="display:none"><button id="spr"></button></div>';
+ }else if(tr==='tw'){
+  h+='<p class="pl">'+esc(biez.q)+(biez.au?' <button id="aud" title="Odtwórz">🔊</button>':'')+'</p><input class="tw" id="twi" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="'+(biez.sluch?'wpisz, co słyszysz':'odpowiedź po angielsku')+'"><div class="row"><button class="pri" id="spr">Sprawdź</button><button id="podp">Podpowiedź</button></div>';
+ }else if(tr==='luki'){
   const T=biez.en.split(' '),R=biegi(biez);let i=0,out=[];
   R.forEach((r,ri)=>{while(i<r[0])out.push(esc(T[i++]));
    const sl=T.slice(r[0],r[1]+1);const p0=rdz(sl[0]),pN=rdz(sl[sl.length-1]);
@@ -198,24 +207,34 @@ function nastepne(){
  }
  $('#glowna').innerHTML=h+'<div id="wyn"></div>';
  $('#spr').onclick=sprawdz;
+ if($('#aud')){$('#aud').onclick=()=>mow(biez.au);if(biez.sluch)setTimeout(()=>mow(biez.au),300)}
+ document.querySelectorAll('[data-o]').forEach(x=>x.onclick=()=>{wyborMC=+x.dataset.o;sprawdz()});
+ if(tr==='tw'){const i=$('#twi');i.focus();i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sprawdz()}});$('#podp').onclick=()=>{const a=biez.a[0];i.placeholder=a.split(' ').map(w=>w[0]+'…').join(' ')}}
  if($('#mik'))$('#mik').onclick=mikrofon;
- if($('#podp'))$('#podp').onclick=()=>document.querySelectorAll('.luka').forEach(x=>{x.placeholder=x.dataset.lit});
+ if($('#podp')&&tr==='luki')$('#podp').onclick=()=>document.querySelectorAll('.luka').forEach(x=>{x.placeholder=x.dataset.lit});
  const L=[...document.querySelectorAll('.luka')];
  L.forEach((x,j)=>x.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(j<L.length-1&&!L[j+1].value)L[j+1].focus();else sprawdz()}}));
  if(L.length)L[0].focus();
  const t=$('#odp');if(t){t.focus();t.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sprawdz()}})}
 }
-let sugestia=3;
+let sugestia=3,wyborMC=null;
 function sprawdz(){
  if(!biez||$('#wyn').dataset.ok)return;$('#wyn').dataset.ok=1;
  $('#spr').disabled=true;if($('#mik'))$('#mik').disabled=true;if($('#podp'))$('#podp').disabled=true;
  const t=$('#odp'),odp=t?t.value.trim():'';if(t)t.readOnly=true;
  let h='';const L=[...document.querySelectorAll('.luka')];
- if(L.length){let dobre=0;
+ const kom=t=>t?'<div class="haslo">'+esc(t)+'</div>':'';
+ if(biez.typ==='mc'){const B=[...document.querySelectorAll('[data-o]')];B.forEach((x,j)=>{x.disabled=true;if(j===biez.ok)x.classList.add('tak');else if(j===wyborMC)x.classList.add('nie')});
+  sugestia=wyborMC===biez.ok?3:1;wyborMC=null;h+=kom(biez.wyj);
+ }else if(biez.typ==='tw'){const i=$('#twi');i.readOnly=true;const ok=biez.a.some(a=>rowne(i.value,a));i.classList.add(ok?'tak':'nie');
+  sugestia=ok?3:1;h+='<div class="en">'+esc(biez.a.join(' / '))+'</div>'+kom(biez.wyj);
+  if(biez.z==='mo'&&biez.en&&biez.en!==biez.a[0])h+='<div class="you">'+esc(biez.en)+'</div>';
+ }else if(L.length){let dobre=0;
   L.forEach(x=>{x.readOnly=true;const ok=rowne(x.value,x.dataset.ok);if(ok)dobre++;x.classList.add(ok?'tak':'nie');
    if(!ok){const s=document.createElement('span');s.className='pop';s.textContent=x.dataset.ok;x.after(s)}});
   sugestia=dobre===L.length?3:dobre>0||L.some(x=>x.value.trim())?2:1;
   if(biez.k)h+='<div class="haslo">'+biez.k.map(k=>'<b>'+esc(k[0])+'</b>'+(k[1]?' · '+esc(k[1]):'')).join('<br>')+'</div>';
+  if(biez.wyj)h+=kom(biez.wyj);
  }else if(t&&odp){const r=porownaj(biez.en,odp);h+='<div class="en">'+r.html+'</div><div class="you">'+r.yh+'</div>';
   const p=Math.round(r.p*100);sugestia=p>=95?3:p>=75?2:1;h+='<div class="score" style="color:var(--'+(p>=95?'ok':p>=75?'warn':'bad')+')">Zgodność z wersją z książki: '+p+'%</div>'}
  else{h+='<div class="en">'+esc(biez.en)+'</div>';sugestia=3;if(biez.k)h+='<div class="haslo">'+biez.k.map(k=>'<b>'+esc(k[0])+'</b>'+(k[1]?' · '+esc(k[1]):'')).join('<br>')+'</div>'}
@@ -224,10 +243,10 @@ function sprawdz(){
  h+='<div class="row"><button id="tts">🔊 Wymowa</button></div>';
  h+='<div class="g">'+[[1,'Nie umiałem'],[2,'Trudne'],[3,'Dobrze'],[4,'Łatwe']].map(([g,n])=>'<button data-g="'+g+'"'+(g===sugestia?' class="s"':'')+'>'+n+'<small>'+g+' · '+nz(g)+'</small></button>').join('')+'</div>';
  $('#wyn').innerHTML=h;
- $('#tts').onclick=()=>mow(biez.en);
+ $('#tts').onclick=()=>mow(biez.en||biez.au||'');
  $('#wyn').querySelectorAll('[data-g]').forEach(x=>x.onclick=()=>ocen(+x.dataset.g));
  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
- if(U().tts)mow(biez.en);
+ if(U().tts&&(biez.en||biez.au))mow(biez.en||biez.au);
 }
 function nowyStan(b,g,nowe){
  if(g===1)return {b:0,dni:0};
@@ -260,7 +279,8 @@ function mikrofon(){const r=new SR();r.lang='en-GB';r.interimResults=true;const 
 
 document.addEventListener('keydown',e=>{
  if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
- if($('#wyn')&&$('#wyn').dataset.ok){if(/^[1-4]$/.test(e.key))ocen(+e.key);else if(e.key===' '){e.preventDefault();mow(biez.en)}else if(e.key==='Enter')ocen(sugestia)}
+ if(biez&&biez.typ==='mc'&&$('#wyn')&&!$('#wyn').dataset.ok){const n=+e.key;if(n>=1&&n<=biez.o.length){wyborMC=n-1;sprawdz()}return}
+ if($('#wyn')&&$('#wyn').dataset.ok){if(/^[1-4]$/.test(e.key))ocen(+e.key);else if(e.key===' '){e.preventDefault();mow(biez.en||biez.au||'')}else if(e.key==='Enter')ocen(sugestia)}
  else if(e.key==='Enter'&&$('#spr')){e.preventDefault();sprawdz()}
 });
 
@@ -276,11 +296,11 @@ async function zaliczDzis(){
 
 // ---------- postęp ----------
 function rysujPostep(){
- const z={pv:[0,0,0],id:[0,0,0]};
+ const z={};for(const x of ZRODLA)z[x.z]=[0,0,0];
  for(const s of ZD){const c=S.c[s.id];const a=z[s.z];if(!c)a[0]++;else if(c.b>=4)a[2]++;else a[1]++}
  const w=(n,a)=>a[0]+a[1]+a[2]?'<tr><td>'+n+'</td><td class="n">'+a[1]+' w nauce</td><td class="n">'+a[2]+' utrwalone</td><td class="n">'+a[0]+' przed tobą</td></tr>':'';
  const jutro=ZD.filter(s=>S.c[s.id]&&S.c[s.id].d===dodajDni(DZIS,1)).length;
- $('#postep').innerHTML='<table>'+w('Idiomy B1–C2',z.id)+w('Phrasal verbs',z.pv)+'</table><p>Jutro powtórek: '+jutro+'. „Utrwalone” to zdania z odstępem co najmniej 2 tygodni.</p>';
+ $('#postep').innerHTML='<table>'+ZRODLA.map(x=>w(x.n,z[x.z])).join('')+'</table><p>Jutro powtórek: '+jutro+'. „Utrwalone” to zdania z odstępem co najmniej 2 tygodni.</p>';
  let hs='';for(let i=13;i>=0;i--){const d=dodajDni(DZIS,-i),x=S.dni[d]||{};const m=Math.round((x.ms||0)/60000);
   hs+='<div title="'+d+': '+m+' min, '+(x.ile||0)+' zdań" style="background:'+(m?'color-mix(in srgb,var(--ok) '+Math.min(100,25+m*4)+'%,var(--line))':'var(--line)')+'"></div>'}
  $('#hist').innerHTML=hs;
@@ -288,10 +308,10 @@ function rysujPostep(){
 
 // ---------- ustawienia ----------
 function ustawienia(){
- const u=U();$('#u_nowe').value=u.nowe;$('#u_min').value=u.min;$('#u_zr').value=u.zr;$('#u_tryb').value=u.tryb;$('#u_tts').checked=!!u.tts;
+ const u=U();$('#u_nowe').value=u.nowe;$('#u_min').value=u.min;const wl=wlaczone();$('#u_zrl').innerHTML=ZRODLA.filter(x=>ZD.some(s=>s.z===x.z)).map(x=>'<label><input type="checkbox" value="'+x.z+'"'+(wl.includes(x.z)?' checked':'')+'> '+esc(x.n)+'</label>').join('');$('#u_tryb').value=u.tryb;$('#u_tts').checked=!!u.tts;
  const tp=TYT.pv||{};$('#u_od').innerHTML=Object.keys(tp).map(k=>'<option value="'+k+'">'+k+'. '+esc(tp[k])+'</option>').join('');$('#u_od').value=u.od;
- const zm=()=>{S.u={nowe:+$('#u_nowe').value||0,min:+$('#u_min').value||20,zr:$('#u_zr').value,od:+$('#u_od').value||1,tryb:$('#u_tryb').value,tts:$('#u_tts').checked,t:Date.now()};zapiszLok();wyslij();pokazCzas()};
- ['#u_nowe','#u_min','#u_zr','#u_od','#u_tryb','#u_tts'].forEach(s=>$(s).onchange=()=>{zm();if(!$('#wyn')||!$('#wyn').dataset.ok){if(biez)Q.unshift(biez);zbudujKolejke();nastepne()}});
+ const zm=()=>{S.u={nowe:+$('#u_nowe').value||0,min:+$('#u_min').value||20,zl:[...document.querySelectorAll('#u_zrl input:checked')].map(x=>x.value),od:+$('#u_od').value||1,tryb:$('#u_tryb').value,tts:$('#u_tts').checked,t:Date.now()};zapiszLok();wyslij();pokazCzas()};
+ ['#u_nowe','#u_min','#u_zrl','#u_od','#u_tryb','#u_tts'].forEach(s=>$(s).onchange=()=>{zm();if(!$('#wyn')||!$('#wyn').dataset.ok){if(biez)Q.unshift(biez);zbudujKolejke();nastepne()}});
 }
 
 // ---------- synchronizacja ----------
