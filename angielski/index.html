@@ -61,12 +61,12 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td{padding:3px 4px;bo
 <label class="f">Minut dziennie <input type="number" id="u_min" min="5" max="90" step="5"></label>
 <div class="f" style="display:block">Źródła nowych zadań (na zmianę):<div id="u_zrl" class="zrl"></div></div>
 <label class="f">Phrasal verbs od rozdziału <select id="u_od"></select></label>
-<label class="f">Tryb odpowiedzi <select id="u_tryb"><option value="luki">uzupełniam idiom w zdaniu</option><option value="mow">tłumaczę na głos, potem odsłaniam</option><option value="pisz">piszę całe zdanie</option></select></label>
+<label class="f">Tryb odpowiedzi <select id="u_tryb"><option value="luki">uzupełniam idiom w zdaniu</option><option value="mow">tłumaczę na głos, potem odsłaniam</option><option value="pisz">piszę całe zdanie</option><option value="sluch">słucham i zapisuję (dyktando)</option></select></label>
 <label class="f">Czytaj odpowiedź na głos po odsłonięciu <input type="checkbox" id="u_tts"></label>
 <p class="small">Skróty: Enter sprawdza, 1–4 oceniają, spacja odtwarza wymowę (gdy pole tekstu nie jest aktywne).</p>
 </details>
 
-<details><summary>Postęp</summary>
+<details id="post"><summary>Postęp</summary>
 <div id="postep" class="small"></div>
 <div class="hist" id="hist"></div>
 <p class="small" id="sync">Zapis tylko w tej przeglądarce. Synchronizacja: otwórz raz adres z #sync=&lt;klucz&gt;.</p>
@@ -185,7 +185,7 @@ function nastepne(){
  biez=Q.shift()||null;licznik();
  if(!biez){koniec();return}
  const st=S.c[biez.id],tr=trybKarty();
- let h='<div class="src"><span>'+esc(zrodlo(biez))+'</span><span>'+(st?'powtórka':'nowe')+'</span></div>'+(tr==='mc'||tr==='tw'?'':'<p class="pl">'+esc(biez.pl||'')+'</p>');
+ let h='<div class="src"><span>'+esc(zrodlo(biez))+'</span><span>'+(st?'powtórka':'nowe')+'</span></div>'+(tr==='mc'||tr==='tw'||tr==='sluch'?'':'<p class="pl">'+esc(biez.pl||'')+'</p>');
  if(tr==='mc'){
   h+='<p class="pl">'+esc(biez.q)+(biez.au?' <button id="aud" title="Wymowa">🔊</button>':'')+'</p><div class="opcje">'+biez.o.map((o,j)=>'<button data-o="'+j+'">'+(j+1)+'. '+esc(o)+'</button>').join('')+'</div><div class="row" style="display:none"><button id="spr"></button></div>';
  }else if(tr==='tw'){
@@ -200,6 +200,8 @@ function nastepne(){
    i=r[1]+1});
   while(i<T.length)out.push(esc(T[i++]));
   h+='<p class="enl">'+out.join(' ')+'</p><div class="row"><button class="pri" id="spr">Sprawdź</button><button id="podp">Podpowiedź</button></div>';
+ }else if(tr==='sluch'){
+  h+='<p class="small">Posłuchaj zdania po angielsku i zapisz je. Polskie tłumaczenie zobaczysz po sprawdzeniu.</p><div class="row"><button id="aud2">🔊 Odtwórz jeszcze raz</button><button id="wolno">🐢 Wolniej</button></div><textarea id="odp" placeholder="Co słyszysz" autocapitalize="sentences" spellcheck="false"></textarea><div class="row"><button class="pri" id="spr">Sprawdź</button></div>';
  }else if(tr==='pisz'){
   h+='<textarea id="odp" placeholder="Twoje tłumaczenie po angielsku" autocapitalize="sentences" spellcheck="false"></textarea><div class="row"><button class="pri" id="spr">Sprawdź</button>'+(SR?'<button id="mik">🎤 Powiedz</button>':'')+'</div>';
  }else{
@@ -207,6 +209,7 @@ function nastepne(){
  }
  $('#glowna').innerHTML=h+'<div id="wyn"></div>';
  $('#spr').onclick=sprawdz;
+ if(tr==='sluch'){$('#aud2').onclick=()=>mow(biez.en);$('#wolno').onclick=()=>mow(biez.en,.7);setTimeout(()=>mow(biez.en),300)}
  if($('#aud')){$('#aud').onclick=()=>mow(biez.au);if(biez.sluch)setTimeout(()=>mow(biez.au),300)}
  document.querySelectorAll('[data-o]').forEach(x=>x.onclick=()=>{wyborMC=+x.dataset.o;sprawdz()});
  if(tr==='tw'){const i=$('#twi');i.focus();i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sprawdz()}});$('#podp').onclick=()=>{const a=biez.a[0];i.placeholder=a.split(' ').map(w=>w[0]+'…').join(' ')}}
@@ -236,7 +239,7 @@ function sprawdz(){
   if(biez.k)h+='<div class="haslo">'+biez.k.map(k=>'<b>'+esc(k[0])+'</b>'+(k[1]?' · '+esc(k[1]):'')).join('<br>')+'</div>';
   if(biez.wyj)h+=kom(biez.wyj);
  }else if(t&&odp){const r=porownaj(biez.en,odp);h+='<div class="en">'+r.html+'</div><div class="you">'+r.yh+'</div>';
-  const p=Math.round(r.p*100);sugestia=p>=95?3:p>=75?2:1;h+='<div class="score" style="color:var(--'+(p>=95?'ok':p>=75?'warn':'bad')+')">Zgodność z wersją z książki: '+p+'%</div>'}
+  const p=Math.round(r.p*100);sugestia=p>=95?3:p>=75?2:1;h+='<div class="score" style="color:var(--'+(p>=95?'ok':p>=75?'warn':'bad')+')">Zgodność z wersją z książki: '+p+'%</div>';if(trybKarty()==='sluch')h+='<div class="you">'+esc(biez.pl||'')+'</div>'}
  else{h+='<div class="en">'+esc(biez.en)+'</div>';sugestia=3;if(biez.k)h+='<div class="haslo">'+biez.k.map(k=>'<b>'+esc(k[0])+'</b>'+(k[1]?' · '+esc(k[1]):'')).join('<br>')+'</div>'}
  const st=S.c[biez.id],b=st?st.b:0;
  const nz=g=>{const nb=nowyStan(b,g,!st).b;return g===1?'dziś':INT[nb]===1?'jutro':INT[nb]+' dni'};
@@ -256,7 +259,7 @@ function nowyStan(b,g,nowe){
 function ocen(g){
  if(!biez)return;const st=S.c[biez.id],nowe=!st,r=nowyStan(st?st.b:0,g,nowe);
  const d=dzien();d.ile++;if(nowe)d.nowe=(d.nowe||0)+1;d.t=Date.now();
- S.c[biez.id]={b:r.b,d:dodajDni(DZIS,r.dni),t:Date.now(),n:(st?st.n:0)+1};
+ S.c[biez.id]={b:r.b,d:dodajDni(DZIS,r.dni),t:Date.now(),n:(st?st.n:0)+1,l:((st&&st.l)||0)+(g===1?1:0)};
  if(g===1){poprawek[biez.id]=(poprawek[biez.id]||0)+1;if(poprawek[biez.id]<=3)Q.splice(Math.min(Q.length,5),0,biez)}
  zapiszLok();wyslij();nastepne();
 }
@@ -272,7 +275,7 @@ function koniec(){
 // ---------- mowa ----------
 let glos=null;function wybierzGlos(){const v=speechSynthesis.getVoices();glos=v.find(x=>/en-GB/i.test(x.lang)&&/Google|Natural|Daniel|Serena/i.test(x.name))||v.find(x=>/en-GB/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}
 if('speechSynthesis' in window){wybierzGlos();speechSynthesis.onvoiceschanged=wybierzGlos}
-function mow(t){if(!('speechSynthesis' in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\//g,' or ').replace(/[()]/g,''));u.lang='en-GB';if(glos)u.voice=glos;u.rate=.95;speechSynthesis.speak(u)}
+function mow(t,tempo){if(!t||!('speechSynthesis' in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\//g,' or ').replace(/[()]/g,''));u.lang='en-GB';if(glos)u.voice=glos;u.rate=tempo||.95;speechSynthesis.speak(u)}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 function mikrofon(){const r=new SR();r.lang='en-GB';r.interimResults=true;const t=$('#odp'),pocz=t.value?t.value+' ':'';$('#mik').textContent='🎤 słucham…';
  r.onresult=e=>{let s='';for(const x of e.results)s+=x[0].transcript;t.value=pocz+s};r.onend=()=>{if($('#mik'))$('#mik').textContent='🎤 Powiedz'};r.start()}
@@ -300,7 +303,11 @@ function rysujPostep(){
  for(const s of ZD){const c=S.c[s.id];const a=z[s.z];if(!c)a[0]++;else if(c.b>=4)a[2]++;else a[1]++}
  const w=(n,a)=>a[0]+a[1]+a[2]?'<tr><td>'+n+'</td><td class="n">'+a[1]+' w nauce</td><td class="n">'+a[2]+' utrwalone</td><td class="n">'+a[0]+' przed tobą</td></tr>':'';
  const jutro=ZD.filter(s=>S.c[s.id]&&S.c[s.id].d===dodajDni(DZIS,1)).length;
- $('#postep').innerHTML='<table>'+ZRODLA.map(x=>w(x.n,z[x.z])).join('')+'</table><p>Jutro powtórek: '+jutro+'. „Utrwalone” to zdania z odstępem co najmniej 2 tygodni.</p>';
+ const sl={};for(const x of ZD){const c=S.c[x.id];if(!c)continue;const k=x.z+'|'+x.u;sl[k]=sl[k]||{n:0,l:0,z:x.z,u:x.u};sl[k].n++;sl[k].l+=c.l||0}
+ const naj=Object.values(sl).filter(a=>a.l>0).sort((a,b)=>b.l/b.n-a.l/a.n).slice(0,5);
+ const slabe=naj.length?'<p><b>Najsłabsze rozdziały</b> (pomyłki na zdanie):</p><table>'+naj.map(a=>'<tr><td>'+esc(zrodlo({z:a.z,u:a.u}))+'</td><td class="n">'+(a.l/a.n).toFixed(1)+'</td><td class="n"><button data-pow="'+a.z+'|'+a.u+'">powtórz</button></td></tr>').join('')+'</table>':'';
+ $('#postep').innerHTML='<table>'+ZRODLA.map(x=>w(x.n,z[x.z])).join('')+'</table><p>Jutro powtórek: '+jutro+'. „Utrwalone” to zdania z odstępem co najmniej 2 tygodni.</p>'+slabe;
+ $('#postep').querySelectorAll('[data-pow]').forEach(b=>b.onclick=()=>{const [z,u]=b.dataset.pow.split('|');const L=ZD.filter(x=>x.z===z&&String(x.u)===u&&S.c[x.id]&&S.c[x.id].l);if(biez)Q.unshift(biez);Q=L.concat(Q);nastepne();window.scrollTo(0,0)});
  let hs='';for(let i=13;i>=0;i--){const d=dodajDni(DZIS,-i),x=S.dni[d]||{};const m=Math.round((x.ms||0)/60000);
   hs+='<div title="'+d+': '+m+' min, '+(x.ile||0)+' zdań" style="background:'+(m?'color-mix(in srgb,var(--ok) '+Math.min(100,25+m*4)+'%,var(--line))':'var(--line)')+'"></div>'}
  $('#hist').innerHTML=hs;
@@ -324,6 +331,7 @@ async function wyslij(){if(!KLUCZ)return;if(trwa){znowu=true;return}trwa=true;
 async function synchro(){if(!KLUCZ)return;try{const zd=await pobierz();S=scal(S,zd);zapiszLok();if(JSON.stringify(scal(zd,S))!==JSON.stringify(zd))await wyslij();else info('Zsynchronizowano '+new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}))}catch(e){info('Offline, zapisano w tej przeglądarce')}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(dz(new Date())!==DZIS)location.reload();else synchro()}});
 
+$('#post').addEventListener('toggle',()=>{if($('#post').open)rysujPostep()});
 (async()=>{
  await wczytaj();
  if(!ZD.length){$('#glowna').innerHTML=KLUCZ?'Nie udało się pobrać zdań z serwera. Sprawdź połączenie i odśwież stronę.':'Zdania są na serwerze i wymagają klucza. Otwórz raz tę stronę (albo dowolną stronę /nauka/) z linkiem zawierającym #sync=…';return}
