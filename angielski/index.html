@@ -88,7 +88,7 @@ const INT=[0,1,3,7,14,30,60,120,240,365];
 // {c:{id:{b,d,t,n}}, dni:{data:{ms,ile,t}}, u:{...,t}}
 let S={c:{},dni:{},u:{}};
 try{S=Object.assign(S,JSON.parse(ls.get(LS)||'{}'))}catch(e){}
-const ZRODLA=[{z:'id',n:'Idiomy B1–C2 (w tłumaczeniach)'},{z:'pv',n:'Phrasal verbs (w tłumaczeniach)'},{z:'mo',n:'Moje słówka C1 i test'},{z:'de',n:'Destination C1 & C2'},{z:'ed',n:'Idiomy Edgard'}];
+const ZRODLA=[{z:'id',n:'Idiomy B1–C2 (w tłumaczeniach)'},{z:'pv',n:'Phrasal verbs (w tłumaczeniach)'},{z:'mo',n:'Moje słówka C1 i test'},{z:'de',n:'Destination C1 & C2',cz:2},{z:'ed',n:'Idiomy Edgard'}];
 const UST0={nowe:20,min:10,zl:null,od:1,tryb:'luki',tts:true};
 const U=()=>Object.assign({},UST0,S.u);
 function scal(a,b){
@@ -104,14 +104,16 @@ const zapiszLok=()=>ls.set(LS,JSON.stringify(S));
 // ---------- dane ----------
 let ZD=[],PO={},TYT={};
 function dekoduj(b64){const k='nauka';const bin=atob(b64.trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i)^k.charCodeAt(i%k.length);return JSON.parse(new TextDecoder().decode(u))}
-// Własne słówka (dane_mo.txt) są w repo. Treść książek leży na serwerze nieciecz (usługa nauka-sync, serwisy ang_dane_id i ang_dane_pv), dostępna tylko z kluczem.
+// Własne słówka (dane_mo.txt) są w repo. Treść książek leży na serwerze nieciecz (usługa nauka-sync, serwisy ang_dane_id, _pv, _de1, _de2, _ed), dostępna tylko z kluczem.
 // Kopia w localStorage pozwala ćwiczyć offline i przyspiesza start.
 async function wczytaj(){
- for(const {z} of ZRODLA){
-  const LK='nauka_ang_dane_'+z;let b64=ls.get(LK);
-  const swiezy=z==='mo'?fetch('dane_mo.txt',{cache:'no-cache'}).then(r=>r.ok?r.text():null).then(d=>{if(d&&d!==ls.get(LK))ls.set(LK,d);return d}).catch(()=>null):KLUCZ?fetch(API+KLUCZ+'/ang_dane_'+z,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{const d=j&&j.v&&j.v.d;if(d&&d!==ls.get(LK))ls.set(LK,d);return d}).catch(()=>null):Promise.resolve(null);
+ const czesci=[];for(const {z,cz} of ZRODLA)for(let n=1;n<=(cz||1);n++)czesci.push([z,cz?z+n:z]);
+ const wyn=await Promise.all(czesci.map(async([z,k])=>{
+  const LK='nauka_ang_dane_'+k;let b64=ls.get(LK);
+  const swiezy=z==='mo'?fetch('dane_mo.txt',{cache:'no-cache'}).then(r=>r.ok?r.text():null).then(d=>{if(d&&d!==ls.get(LK))ls.set(LK,d);return d}).catch(()=>null):KLUCZ?fetch(API+KLUCZ+'/ang_dane_'+k,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{const d=j&&j.v&&j.v.d;if(d&&d!==ls.get(LK))ls.set(LK,d);return d}).catch(()=>null):Promise.resolve(null);
   const nowy=await Promise.race([swiezy,new Promise(r=>setTimeout(()=>r(null),b64?3000:20000))]);if(nowy)b64=nowy;
-  if(!b64)continue;
+  return [z,b64]}));
+ for(const [z,b64] of wyn){if(!b64)continue;
   try{const d=dekoduj(b64);TYT[z]=d.t;for(const s of d.s){s.z=z;ZD.push(s);PO[s.id]=s}}catch(e){}
  }
 }
@@ -119,7 +121,7 @@ async function wczytaj(){
 // ---------- kolejka dnia ----------
 let Q=[],biez=null,ileNowych=0,ileZrob=0,poprawek={};
 function wlaczone(){const u=U();const dost=ZRODLA.map(x=>x.z).filter(z=>ZD.some(s=>s.z===z));
- let l=u.zl;if(!l){l=u.zr==='id'?['id']:u.zr==='pv'?['pv']:dost}return dost.filter(z=>l.includes(z))}
+ let l=u.zl;if(!l){l=u.zr==='id'?['id']:u.zr==='pv'?['pv']:dost}else{const zn=u.zn||['id','pv','mo'];l=l.concat(dost.filter(z=>!zn.includes(z)))}return dost.filter(z=>l.includes(z))}
 function nowePula(z){
  const u=U();
  return ZD.filter(s=>s.z===z&&!S.c[s.id]&&(z!=='pv'||s.u>=u.od));
@@ -317,7 +319,7 @@ function rysujPostep(){
 function ustawienia(){
  const u=U();$('#u_nowe').value=u.nowe;$('#u_min').value=u.min;const wl=wlaczone();$('#u_zrl').innerHTML=ZRODLA.filter(x=>ZD.some(s=>s.z===x.z)).map(x=>'<label><input type="checkbox" value="'+x.z+'"'+(wl.includes(x.z)?' checked':'')+'> '+esc(x.n)+'</label>').join('');$('#u_tryb').value=u.tryb;$('#u_tts').checked=!!u.tts;
  const tp=TYT.pv||{};$('#u_od').innerHTML=Object.keys(tp).map(k=>'<option value="'+k+'">'+k+'. '+esc(tp[k])+'</option>').join('');$('#u_od').value=u.od;
- const zm=()=>{S.u={nowe:+$('#u_nowe').value||0,min:+$('#u_min').value||20,zl:[...document.querySelectorAll('#u_zrl input:checked')].map(x=>x.value),od:+$('#u_od').value||1,tryb:$('#u_tryb').value,tts:$('#u_tts').checked,t:Date.now()};zapiszLok();wyslij();pokazCzas()};
+ const zm=()=>{S.u={nowe:+$('#u_nowe').value||0,min:+$('#u_min').value||20,zl:[...document.querySelectorAll('#u_zrl input:checked')].map(x=>x.value),zn:[...document.querySelectorAll('#u_zrl input')].map(x=>x.value),od:+$('#u_od').value||1,tryb:$('#u_tryb').value,tts:$('#u_tts').checked,t:Date.now()};zapiszLok();wyslij();pokazCzas()};
  ['#u_nowe','#u_min','#u_zrl','#u_od','#u_tryb','#u_tts'].forEach(s=>$(s).onchange=()=>{zm();if(!$('#wyn')||!$('#wyn').dataset.ok){if(biez)Q.unshift(biez);zbudujKolejke();nastepne()}});
 }
 
