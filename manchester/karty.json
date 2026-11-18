@@ -466,5 +466,41 @@
 "t": "2026-44",
 "af": "a/pl_1dfc4371bde4.mp3",
 "ab": "a/en_396927b55536.mp3"
+},
+{
+"id": "bfe3ba5f125c",
+"f": "oszczędny (rozsądnie) a skąpy (sknera)",
+"lf": "PL",
+"b": "frugal vs stingy",
+"bs": "frugal = careful with money, avoiding waste (positive): \"a frugal lifestyle\"; stingy = unwilling to spend or share (negative): \"too stingy to tip\"",
+"lb": "EN",
+"d": "2026-11-18",
+"t": "2026-47",
+"af": "a/pl_abe110eb601f.mp3",
+"ab": "a/en_a1c45a36c174.mp3"
+},
+{
+"id": "35586dae8836",
+"f": "szambo, kloaka; siedlisko zła, zepsucia",
+"lf": "PL",
+"b": "cesspool",
+"bs": "a pit for sewage; figuratively, a place full of evil or corruption: \"a cesspool of corruption\"",
+"lb": "EN",
+"d": "2026-11-18",
+"t": "2026-47",
+"af": "a/pl_218b271182f9.mp3",
+"ab": "a/en_436761fc963b.mp3"
+},
+{
+"id": "53a30232627c",
+"f": "naiwny dobroczyńca, natrętny uszczęśliwiacz",
+"lf": "PL",
+"b": "do-gooder",
+"bs": "(slightly disapproving) sb who tries too eagerly to help others, often naively or in an unwanted way",
+"lb": "EN",
+"d": "2026-11-18",
+"t": "2026-47",
+"af": "a/pl_e4333686676a.mp3",
+"ab": "a/en_ea2e44ac4044.mp3"
 }
 ]
