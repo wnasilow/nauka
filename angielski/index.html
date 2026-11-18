@@ -97,6 +97,7 @@ function scal(a,b){
  for(const k in b.c||{}){const x=b.c[k];if(!r.c[k]||x.t>r.c[k].t)r.c[k]=x}
  for(const k in b.dni||{}){const x=b.dni[k];if(!r.dni[k]||x.t>r.dni[k].t)r.dni[k]=x}
  if(b.u&&(!r.u.t||b.u.t>r.u.t))r.u=b.u;
+ r.alt=r.alt||{};for(const k in b.alt||{}){const x=b.alt[k];if(!r.alt[k]||x.t>r.alt[k].t)r.alt[k]=x}
  return r;
 }
 const zapiszLok=()=>ls.set(LS,JSON.stringify(S));
@@ -231,13 +232,13 @@ function sprawdz(){
  const kom=t=>t?'<div class="haslo">'+esc(t)+'</div>':'';
  if(biez.typ==='mc'){const B=[...document.querySelectorAll('[data-o]')];B.forEach((x,j)=>{x.disabled=true;if(j===biez.ok)x.classList.add('tak');else if(j===wyborMC)x.classList.add('nie')});
   sugestia=wyborMC===biez.ok?3:1;wyborMC=null;h+=kom(biez.wyj);
- }else if(biez.typ==='tw'){const i=$('#twi');i.readOnly=true;const ok=biez.a.some(a=>rowne(i.value,a));i.classList.add(ok?'tak':'nie');
-  sugestia=ok?3:1;h+='<div class="en">'+esc(biez.a.join(' / '))+'</div>'+kom(biez.wyj);
+ }else if(biez.typ==='tw'){const i=$('#twi');i.readOnly=true;const A=biez.a.concat((S.alt&&S.alt[biez.id]||{}).a||[]);const pop=/\(Popraw/.test(biez.q),nn=t=>' '+t.toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim()+' ';const ok=A.some(a=>rowne(i.value,a)||(pop&&nn(i.value).includes(nn(a))));i.classList.add(ok?'tak':'nie');
+  sugestia=ok?3:1;h+='<div class="en">'+esc(biez.a.join(' / '))+'</div>'+(!ok&&i.value.trim()?'<div class="row"><button id="mojd">✓ Moja odpowiedź też jest dobra</button></div>':'')+kom(biez.wyj);
   if(biez.z==='mo'&&biez.en&&biez.en!==biez.a[0])h+='<div class="you">'+esc(biez.en)+'</div>';
  }else if(L.length){let dobre=0;
   L.forEach(x=>{x.readOnly=true;const ok=rowne(x.value,x.dataset.ok);if(ok)dobre++;x.classList.add(ok?'tak':'nie');
    if(!ok){const s=document.createElement('span');s.className='pop';s.textContent=x.dataset.ok;x.after(s)}});
-  sugestia=dobre===L.length?3:dobre>0||L.some(x=>x.value.trim())?2:1;
+  sugestia=dobre===L.length?3:dobre>0?2:1;
   if(biez.k)h+='<div class="haslo">'+biez.k.map(k=>'<b>'+esc(k[0])+'</b>'+(k[1]?' · '+esc(k[1]):'')).join('<br>')+'</div>';
   if(biez.wyj)h+=kom(biez.wyj);
  }else if(t&&odp){const r=porownaj(biez.en,odp);h+='<div class="en">'+r.html+'</div><div class="you">'+r.yh+'</div>';
@@ -249,6 +250,8 @@ function sprawdz(){
  h+='<div class="g">'+[[1,'Nie umiałem'],[2,'Trudne'],[3,'Dobrze'],[4,'Łatwe']].map(([g,n])=>'<button data-g="'+g+'"'+(g===sugestia?' class="s"':'')+'>'+n+'<small>'+g+' · '+nz(g)+'</small></button>').join('')+'</div>';
  $('#wyn').innerHTML=h;
  $('#tts').onclick=()=>mow(biez.en||biez.au||'');
+ if($('#mojd'))$('#mojd').onclick=()=>{const v=$('#twi').value.trim(),id=biez.id;S.alt=S.alt||{};const e=S.alt[id]||{a:[]};if(!e.a.includes(v))e.a.push(v);e.t=Date.now();S.alt[id]=e;zapiszLok();wyslij();
+  $('#twi').classList.replace('nie','tak');$('#mojd').parentNode.remove();sugestia=3;$('#wyn').querySelectorAll('[data-g]').forEach(x=>x.classList.toggle('s',+x.dataset.g===3))};
  $('#wyn').querySelectorAll('[data-g]').forEach(x=>x.onclick=()=>ocen(+x.dataset.g));
  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
  if(U().tts&&(biez.en||biez.au))mow(biez.en||biez.au);
