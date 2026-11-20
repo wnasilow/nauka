@@ -60,6 +60,11 @@ li .tx{flex:1;min-width:0}
 li .tx a{display:block}
 .intro{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin:10px 0}
 .intro p{margin:.3em 0}
+.start{display:inline-block;background:var(--accent);color:var(--accent-ink);font-size:.72rem;font-weight:700;border-radius:6px;padding:1px 7px;margin-bottom:2px;text-transform:uppercase;letter-spacing:.03em}
+li.st{background:var(--accent-soft);border-radius:8px}
+.intro ol{margin:.3em 0;padding-left:1.3em}
+.intro ol a{color:var(--accent)}
+.intro ol li{display:list-item;border:0;padding:2px 0}
 </style>
 </head>
 <body>
@@ -72,18 +77,23 @@ li .tx a{display:block}
   <span id="sync" class="muted"></span>
 </div>
 <div class="intro small">
-<p>Kolejność: najpierw Richardson (vcodex), potem jeden lub dwa wykłady z Demuxed, Girod ze Stanforda na dłuższe wieczory.</p>
-<p class="muted">Pod projekt: NAL, SPS/PPS i Annex B są w punktach 1.2 i 1.4, fMP4 w przeglądarce w 2.2.</p>
+<p><span class="start">Zacznij tutaj</span> trzy rzeczy na pierwszy wieczór, pod projekt:</p>
+<ol>
+<li><a href="https://www.youtube.com/watch?v=gxefuXizO04" target="_blank" rel="noopener">Richardson: Introduction to Video Coding</a> (film)</li>
+<li><a href="https://membrane-core.hexdocs.pm/1.2.4/3_h264_nal_units.html" target="_blank" rel="noopener">H264 NAL units</a>: NAL, SPS/PPS, Annex B</li>
+<li><a href="https://www.youtube.com/watch?v=OBhlTcllq_E" target="_blank" rel="noopener">Demuxed: Baby's first HTML5 video element</a>: fMP4 w przeglądarce</li>
+</ol>
+<p class="muted">Potem reszta w kolejności: Richardson, Demuxed, Girod na dłuższe wieczory.</p>
 </div>
 <div id="lista"></div>
 </div>
 <script>
 const MAT = [
  {g:"1. Iain Richardson (vcodex), autor książki o H.264", items:[
-  {id:"vc_intro", n:"Vcodex: Introduction to Video Coding", o:"Film na YouTube, wprowadzenie do kodowania wideo", href:"https://www.youtube.com/watch?v=gxefuXizO04"},
+  {s:1, id:"vc_intro", n:"Vcodex: Introduction to Video Coding", o:"Film na YouTube, wprowadzenie do kodowania wideo", href:"https://www.youtube.com/watch?v=gxefuXizO04"},
   {id:"vc_overview", n:"An Overview of H.264 Advanced Video Coding", o:"Artykuł: budowa kodeka, profile, slice'y, NAL", href:"https://www.vcodex.com/an-overview-of-h264-advanced-video-coding"},
   {id:"vc_walk", n:"Video Coding Walkthrough", o:"Artykuł: krok po kroku przez koder", href:"https://www.vcodex.com/video-coding-walkthrough"},
-  {id:"nal_membrane", n:"H264 NAL units (Membrane)", o:"Praktycznie: typy NAL, SPS/PPS, Annex B kontra AVCC", href:"https://membrane-core.hexdocs.pm/1.2.4/3_h264_nal_units.html"},
+  {s:1, id:"nal_membrane", n:"H264 NAL units (Membrane)", o:"Praktycznie: typy NAL, SPS/PPS, Annex B kontra AVCC", href:"https://membrane-core.hexdocs.pm/1.2.4/3_h264_nal_units.html"},
   {id:"vc_intra", n:"H.264/AVC Intra Prediction", o:"Artykuł vcodex", href:"https://www.vcodex.com/h264avc-intra-prediction"},
   {id:"vc_pic", n:"H.264/AVC Picture Management", o:"Artykuł vcodex: ramki referencyjne, IDR, kolejność", href:"https://www.vcodex.com/h264avc-picture-management"},
   {id:"vc_loop", n:"H.264/AVC Loop Filter", o:"Artykuł vcodex", href:"https://www.vcodex.com/h264avc-loop-filter"},
@@ -93,7 +103,7 @@ const MAT = [
  ]},
  {g:"2. Demuxed, konferencja inżynierów wideo", items:[
   {id:"dx_kanal", n:"Kanał Demuxed na YouTube", o:"Wszystkie nagrania, szukaj fMP4, CMAF, Annex B", href:"https://www.youtube.com/@Demuxed"},
-  {id:"dx_buelens", n:"Mattias Buelens: Baby's first HTML5 video element", o:"MSE i fMP4 w przeglądarce", href:"https://www.youtube.com/watch?v=OBhlTcllq_E"},
+  {s:1, id:"dx_buelens", n:"Mattias Buelens: Baby's first HTML5 video element", o:"MSE i fMP4 w przeglądarce", href:"https://www.youtube.com/watch?v=OBhlTcllq_E"},
   {id:"dx_kalkanis", n:"Marina Kalkanis: wdrażanie Low Latency HLS w praktyce", o:"LL-HLS, części segmentów", href:"https://www.youtube.com/watch?v=GxFm4ikKiZc"},
   {id:"dx_levine", n:"Jon Levine: The Quest for Low Latency Live", o:"Niska latencja na żywo", href:"https://www.youtube.com/watch?v=CEcwIPmSatg"},
   {id:"dx_2022", n:"Demuxed 2022, cała playlista", o:"Do wyboru", href:"https://www.youtube.com/playlist?list=PLkyaYNWEKcOf98lZxnCcL6y7ZIVU3oSYO"}
@@ -129,8 +139,8 @@ function rysuj() {
     d.querySelector("h2").textContent = gr.g;
     const ul = d.querySelector("ul");
     for (const x of gr.items) {
-      const li = document.createElement("li"); if (ob(x.id)) li.className = "w";
-      li.innerHTML = `<input type="checkbox" aria-label="zrobione"><span class="tx"><a target="_blank" rel="noopener"></a><span class="opis"></span></span>`;
+      const li = document.createElement("li"); li.className = (ob(x.id) ? "w " : "") + (x.s ? "st" : "");
+      li.innerHTML = `<input type="checkbox" aria-label="zrobione"><span class="tx">${x.s ? '<span class="start">Zacznij tutaj</span>' : ''}<a target="_blank" rel="noopener"></a><span class="opis"></span></span>`;
       const cb = li.querySelector("input"); cb.checked = ob(x.id); cb.onchange = () => ustaw(x.id, cb.checked);
       const a = li.querySelector("a"); a.href = x.href; a.textContent = x.n;
       li.querySelector(".opis").textContent = x.o;
