@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pl">
+<head><link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#c4122f"><link rel="apple-touch-icon" href="../ikona-192.png"><link rel="icon" href="../ikona-192.png"><script>if('serviceWorker' in navigator)navigator.serviceWorker.register('../sw.js',{scope:'../'})</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Kurs H.264</title>
+<meta name="theme-color" content="#c4122f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{
+  --bg:#f3f4f2; --panel:#fff; --ink:#1b1f22; --muted:#5d666c; --line:#d9ddda;
+  --accent:#c4122f; --accent-ink:#fff; --accent-soft:#fbe7ea; --ok:#1f7a3a;
+  --font-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --font-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141719; --panel:#1d2124; --ink:#e8eae8; --muted:#9aa3a8; --line:#30363a;
+  --accent:#ff5468; --accent-ink:#1a0005; --accent-soft:#3a1a20; --ok:#5fd17f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141719; --panel:#1d2124; --ink:#e8eae8; --muted:#9aa3a8; --line:#30363a;
+  --accent:#ff5468; --accent-ink:#1a0005; --accent-soft:#3a1a20; --ok:#5fd17f; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--font-body);padding:env(safe-area-inset-top) 16px calc(32px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
+.wrap{max-width:680px;margin:0 auto}
+h1,h2{font-family:var(--font-display);font-weight:700;line-height:1.1;margin:0}
+h1{font-size:2rem}
+header{padding:20px 0 6px}
+header a{color:var(--muted);font-size:.9rem;text-decoration:none}
+.muted{color:var(--muted)} .small{font-size:.88rem}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.tools{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:10px 0 14px}
+.tools label{display:flex;gap:6px;align-items:center;cursor:pointer}
+#sync{font-size:.85rem}
+details{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin:10px 0;overflow:hidden}
+summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary h2{font-size:1.3rem}
+summary .cnt{color:var(--muted);font-size:.9rem;white-space:nowrap}
+summary .cnt.done{color:var(--ok);font-weight:600}
+.fl{display:block;padding:0 16px 8px;font-size:.88rem;color:var(--accent);text-decoration:none}
+li a.fd{flex:none;font-size:1.1rem;text-decoration:none;color:var(--muted)}
+ul{list-style:none;margin:0;padding:0 8px 8px}
+li{display:flex;gap:10px;align-items:center;padding:8px;border-top:1px solid var(--line)}
+li input{width:22px;height:22px;flex:none;accent-color:var(--accent);cursor:pointer}
+li a{flex:1;color:var(--ink);text-decoration:none;min-width:0;overflow-wrap:anywhere}
+li a:hover{color:var(--accent)}
+li .sz{color:var(--muted);font-size:.8rem;white-space:nowrap}
+li.w a{color:var(--muted)}
+body.hide li.w{display:none}
+body.hide details.alldone{display:none}
+button.lnk{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;padding:0;text-decoration:underline}
+</style>
+<style>
+li .opis{display:block;color:var(--muted);font-size:.85rem}
+li .tx{flex:1;min-width:0}
+li .tx a{display:block}
+.intro{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin:10px 0}
+.intro p{margin:.3em 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><a href="../">← Nauka</a><h1>Kurs H.264 i streaming</h1><div class="muted small">Kodek, strumień NAL, kontenery fMP4 i CMAF</div></header>
+<div class="bar"><i id="pbar"></i></div>
+<div id="ptxt" class="small"></div>
+<div class="tools">
+  <label><input type="checkbox" id="hide"> ukryj zrobione</label>
+  <span id="sync" class="muted"></span>
+</div>
+<div class="intro small">
+<p>Kolejność: najpierw Richardson (vcodex), potem jeden lub dwa wykłady z Demuxed, Girod ze Stanforda na dłuższe wieczory.</p>
+<p class="muted">Pod projekt: NAL, SPS/PPS i Annex B są w punktach 1.2 i 1.4, fMP4 w przeglądarce w 2.2.</p>
+</div>
+<div id="lista"></div>
+</div>
+<script>
+const MAT = [
+ {g:"1. Iain Richardson (vcodex), autor książki o H.264", items:[
+  {id:"vc_intro", n:"Vcodex: Introduction to Video Coding", o:"Film na YouTube, wprowadzenie do kodowania wideo", href:"https://www.youtube.com/watch?v=gxefuXizO04"},
+  {id:"vc_overview", n:"An Overview of H.264 Advanced Video Coding", o:"Artykuł: budowa kodeka, profile, slice'y, NAL", href:"https://www.vcodex.com/an-overview-of-h264-advanced-video-coding"},
+  {id:"vc_walk", n:"Video Coding Walkthrough", o:"Artykuł: krok po kroku przez koder", href:"https://www.vcodex.com/video-coding-walkthrough"},
+  {id:"nal_membrane", n:"H264 NAL units (Membrane)", o:"Praktycznie: typy NAL, SPS/PPS, Annex B kontra AVCC", href:"https://membrane-core.hexdocs.pm/1.2.4/3_h264_nal_units.html"},
+  {id:"vc_intra", n:"H.264/AVC Intra Prediction", o:"Artykuł vcodex", href:"https://www.vcodex.com/h264avc-intra-prediction"},
+  {id:"vc_pic", n:"H.264/AVC Picture Management", o:"Artykuł vcodex: ramki referencyjne, IDR, kolejność", href:"https://www.vcodex.com/h264avc-picture-management"},
+  {id:"vc_loop", n:"H.264/AVC Loop Filter", o:"Artykuł vcodex", href:"https://www.vcodex.com/h264avc-loop-filter"},
+  {id:"vc_cavlc", n:"H.264/AVC CAVLC", o:"Artykuł vcodex: kodowanie entropijne", href:"https://www.vcodex.com/h264avc-context-adaptive-variable-length-coding"},
+  {id:"vc_cabac", n:"H.264/AVC CABAC", o:"Artykuł vcodex: kodowanie arytmetyczne", href:"https://www.vcodex.com/h264avc-context-adaptive-binary-arithmetic-coding-cabac"},
+  {id:"vc_yt", n:"Więcej filmów vcodex na YouTube", o:"Wyszukiwanie na YouTube", href:"https://www.youtube.com/results?search_query=vcodex"}
+ ]},
+ {g:"2. Demuxed, konferencja inżynierów wideo", items:[
+  {id:"dx_kanal", n:"Kanał Demuxed na YouTube", o:"Wszystkie nagrania, szukaj fMP4, CMAF, Annex B", href:"https://www.youtube.com/@Demuxed"},
+  {id:"dx_buelens", n:"Mattias Buelens: Baby's first HTML5 video element", o:"MSE i fMP4 w przeglądarce", href:"https://www.youtube.com/watch?v=OBhlTcllq_E"},
+  {id:"dx_kalkanis", n:"Marina Kalkanis: wdrażanie Low Latency HLS w praktyce", o:"LL-HLS, części segmentów", href:"https://www.youtube.com/watch?v=GxFm4ikKiZc"},
+  {id:"dx_levine", n:"Jon Levine: The Quest for Low Latency Live", o:"Niska latencja na żywo", href:"https://www.youtube.com/watch?v=CEcwIPmSatg"},
+  {id:"dx_2022", n:"Demuxed 2022, cała playlista", o:"Do wyboru", href:"https://www.youtube.com/playlist?list=PLkyaYNWEKcOf98lZxnCcL6y7ZIVU3oSYO"}
+ ]},
+ {g:"3. Bernd Girod, Stanford EE398A (na dłuższe wieczory)", items:[
+  {id:"gi_strona", n:"EE398A Image and Video Compression, slajdy", o:"Wszystkie wykłady w PDF", href:"https://web.stanford.edu/class/ee398a/handouts.htm"},
+  {id:"gi_inter", n:"Wykład: Interframe Coding", o:"PDF, predykcja między klatkami", href:"https://web.stanford.edu/class/ee398a/handouts/lectures/11-InterframeCoding.pdf"},
+  {id:"gi_mc", n:"Wykład: Motion-Compensated Coding", o:"PDF, kompensacja ruchu", href:"https://web.stanford.edu/class/ee398a/handouts/lectures/13-MotionCompensatedCoding.pdf"}
+ ]}
+];
+const API = "https://nieciecz.taile0bd49.ts.net:8443/sync/";
+const SERWIS = "wideo", LS = "nauka_wideo_stan", LSK = "nauka_sync_klucz", LSH = "nauka_wideo_ukryj";
+const ls = {get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const m = location.hash.match(/sync=([\w-]+)/);
+if (m) { ls.set(LSK, m[1]); history.replaceState(null, "", location.pathname); }
+const KLUCZ = ls.get(LSK);
+let stan = {}; try { stan = JSON.parse(ls.get(LS) || "{}") || {}; } catch (e) {}
+const $ = s => document.querySelector(s);
+function scal(a, b) { const o = {...a}; for (const [k, v] of Object.entries(b || {})) if (!o[k] || (v.t || 0) > (o[k].t || 0)) o[k] = v; return o; }
+const ob = id => !!(stan[id] && stan[id].w);
+function rysuj() {
+  const otwarte = new Set([...document.querySelectorAll("details[open]")].map(d => d.dataset.f));
+  const pierwszyRaz = !document.querySelector("details");
+  const box = $("#lista"); box.innerHTML = "";
+  let razem = 0, zrob = 0, pierwsza = null;
+  for (const gr of MAT) {
+    const n = gr.items.filter(x => ob(x.id)).length;
+    razem += gr.items.length; zrob += n;
+    if (pierwsza === null && n < gr.items.length) pierwsza = gr.g;
+    const d = document.createElement("details"); d.dataset.f = gr.g;
+    if (n === gr.items.length) d.className = "alldone";
+    d.innerHTML = `<summary><h2></h2><span class="cnt${n === gr.items.length ? " done" : ""}">${n}/${gr.items.length}</span></summary><ul></ul>`;
+    d.querySelector("h2").textContent = gr.g;
+    const ul = d.querySelector("ul");
+    for (const x of gr.items) {
+      const li = document.createElement("li"); if (ob(x.id)) li.className = "w";
+      li.innerHTML = `<input type="checkbox" aria-label="zrobione"><span class="tx"><a target="_blank" rel="noopener"></a><span class="opis"></span></span>`;
+      const cb = li.querySelector("input"); cb.checked = ob(x.id); cb.onchange = () => ustaw(x.id, cb.checked);
+      const a = li.querySelector("a"); a.href = x.href; a.textContent = x.n;
+      li.querySelector(".opis").textContent = x.o;
+      ul.appendChild(li);
+    }
+    box.appendChild(d);
+    if (otwarte.has(gr.g) || (pierwszyRaz && gr.g === pierwsza)) d.open = true;
+  }
+  $("#pbar").style.width = (100 * zrob / razem) + "%";
+  $("#ptxt").textContent = `Zrobione: ${zrob} z ${razem}`;
+}
+function ustaw(id, w) { stan[id] = {w: w ? 1 : 0, t: Date.now()}; ls.set(LS, JSON.stringify(stan)); rysuj(); wyslij(); }
+function info(t) { $("#sync").textContent = t; }
+async function pobierz() { const r = await fetch(API + KLUCZ + "/" + SERWIS, {cache: "no-store"}); if (!r.ok) throw new Error(r.status); return (await r.json()).v || {}; }
+let trwa = false, znowu = false;
+const godz = () => new Date().toLocaleTimeString("pl", {hour: "2-digit", minute: "2-digit"});
+async function wyslij() {
+  if (!KLUCZ) return;
+  if (trwa) { znowu = true; return; }
+  trwa = true;
+  try {
+    stan = scal(stan, await pobierz());
+    const r = await fetch(API + KLUCZ + "/" + SERWIS, {method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({v: stan})});
+    if (!r.ok) throw new Error(r.status);
+    ls.set(LS, JSON.stringify(stan)); info("zsynchronizowano " + godz());
+  } catch (e) { info("offline, zapisano w tej przeglądarce"); }
+  trwa = false; if (znowu) { znowu = false; wyslij(); }
+}
+async function synchronizuj() {
+  if (!KLUCZ) { info("synchronizacja wyłączona (otwórz stronę z linkiem #sync=…)"); return; }
+  try {
+    const zdalny = await pobierz(); const przed = JSON.stringify(stan);
+    stan = scal(stan, zdalny); ls.set(LS, JSON.stringify(stan));
+    if (JSON.stringify(stan) !== przed) rysuj();
+    if (JSON.stringify(scal(zdalny, stan)) !== JSON.stringify(zdalny)) await wyslij(); else info("zsynchronizowano " + godz());
+  } catch (e) { info("offline, zapisano w tej przeglądarce"); }
+}
+$("#hide").checked = ls.get(LSH) === "1";
+document.body.classList.toggle("hide", $("#hide").checked);
+$("#hide").onchange = e => { document.body.classList.toggle("hide", e.target.checked); ls.set(LSH, e.target.checked ? "1" : "0"); };
+document.addEventListener("visibilitychange", () => { if (!document.hidden) synchronizuj(); });
+rysuj(); synchronizuj();
+</script>
+</body>
+</html>
